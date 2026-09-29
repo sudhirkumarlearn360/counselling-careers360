@@ -22,6 +22,24 @@ MATRIX = [
     row("GET", "/api/1/auth/me", 401, 200, 200, 200),
     row("POST", "/api/1/auth/logout", 400, 400, 400, 400),  # open to anyone; 400 = no refresh token sent
     row("GET", "/api/1/ops/live", 401, 200, 403, 403),
+    # Task 3. `{centre_id}`, `{counsellor_id}`, `{posting_id}` are filled from the fixtures.
+    # An empty body: writes that need a body answer 400 to ops (auth and role are decided first).
+    row("GET", "/api/1/ops/centres", 401, 200, 403, 403),
+    row("POST", "/api/1/ops/centres", 401, 400, 403, 403),
+    row("GET", "/api/1/ops/centres/{centre_id}", 401, 200, 403, 403),
+    row("PATCH", "/api/1/ops/centres/{centre_id}", 401, 200, 403, 403),
+    row("POST", "/api/1/ops/centres/{centre_id}/go-live", 401, 400, 403, 403),  # live already
+    row("GET", "/api/1/ops/centres/{centre_id}/close", 401, 200, 403, 403),
+    row("POST", "/api/1/ops/centres/{centre_id}/close", 401, 409, 403, 403),  # needs confirm
+    row("GET", "/api/1/ops/counsellors", 401, 200, 403, 403),
+    row("POST", "/api/1/ops/counsellors", 401, 400, 403, 403),
+    row("GET", "/api/1/ops/counsellors/{counsellor_id}", 401, 200, 403, 403),
+    row("PATCH", "/api/1/ops/counsellors/{counsellor_id}", 401, 200, 403, 403),
+    row("GET", "/api/1/ops/counsellors/{counsellor_id}/postings", 401, 200, 403, 403),
+    row("POST", "/api/1/ops/counsellors/{counsellor_id}/postings", 401, 400, 403, 403),
+    row("PATCH", "/api/1/ops/postings/{posting_id}", 401, 200, 403, 403),
+    # desk/duty: ops needs ?as_counsellor (400); the counsellor sends no duty (400); reception 403.
+    row("POST", "/api/1/desk/duty", 401, 400, 403, 400),
 ]
 
 
@@ -33,7 +51,10 @@ def _cases():
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("method, url, role, expected", list(_cases()))
-def test_role_matrix(client_as, method, url, role, expected):
+def test_role_matrix(client_as, centre, counsellor, method, url, role, expected):
+    url = url.format(
+        centre_id=centre.id, counsellor_id=counsellor.id, posting_id=counsellor.postings.get().id
+    )
     resp = client_as(role).generic(method, url)
     assert resp.status_code == expected, resp.content
     if expected in (401, 403):

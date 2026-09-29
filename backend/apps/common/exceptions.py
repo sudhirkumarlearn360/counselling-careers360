@@ -63,3 +63,10 @@ def exception_handler(exc, context):
         code = codes if isinstance(codes, str) else exc.default_code
         response.data = {"code": code, "message": _first_message(exc.detail), "data": {}}
     return response
+
+
+class NeedsConfirmation(DomainError):
+    """The action is allowed but the caller must resend it with ``confirm: true`` (CQ-8, CQ-10)."""
+
+    code = "needs_confirmation"
+    status_code = status.HTTP_409_CONFLICT

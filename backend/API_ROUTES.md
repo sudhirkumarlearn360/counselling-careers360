@@ -13,7 +13,7 @@ Rules (summary):
 | Method | Path (prefix `/api/1/`) | Name | Who | Stories |
 |---|---|---|---|---|
 | POST | `auth/login` | cq.auth.login | anyone | 1, 2 |
-| POST | `auth/logout` | cq.auth.logout | anyone with a refresh token | 4 |
+| POST | `auth/logout` | cq.auth.logout | anyone (refresh token in body) | 4 |
 | POST | `auth/refresh` | cq.auth.refresh | staff | 1 |
 | GET | `auth/me` | cq.auth.me | staff | 1, 3 |
 | GET | `public/centres/<centre_slug>` | cq.public.centre-detail | student | 12, 13, 14 |
