@@ -21,6 +21,7 @@ backend/
     messaging/   Message, OtpCode, providers/{base,stub}.py, services.py, templates.py
     insights/    selectors.py (aggregations), export.py (CSV)
     public/      student-facing views (no auth)
+    common/      validators.py (normalise_mobile, valid_mobile, valid_email), exception handler
   tests/ mirror apps/, one file per story group: tests/queue/test_cq19_assignment.py …
 ```
 
@@ -55,6 +56,7 @@ backend/
 | `GET students/?filters` · `GET students/export.csv` | ops (counsellor: own) | 50, 59, 60 |
 | `GET insights/?centre=` | ops | 61 |
 | `GET live/` | ops | 5 |
+
 Polling endpoints (`public/tokens`, `public/board`, `hall`, `desk/queue`, `public/centres`) must be single-query-per-panel (`select_related`/`prefetch_related`), with no N+1, and return in under 100 ms on seed data.
 
 ## Testing
