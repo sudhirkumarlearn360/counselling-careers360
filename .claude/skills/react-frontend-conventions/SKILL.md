@@ -1,12 +1,21 @@
 ---
 name: react-frontend-conventions
-description: How the CounselQueue frontend is built — React 19 + Vite + TypeScript, routes for student flow, token page, staff console and hall board, TanStack Query polling, React Hook Form + Zod mirroring backend validation, role-gated navigation, design tokens, and Vitest + Testing Library tests per acceptance criterion. Load before writing or reviewing any code under frontend/.
+description: How the CounselQueue frontend is built — React 18.2 + Vite + TypeScript, routes for student flow, token page, staff console and hall board, TanStack Query polling, React Hook Form + Zod mirroring backend validation, role-gated navigation, design tokens, and Vitest + Testing Library tests per acceptance criterion. Load before writing or reviewing any code under frontend/.
 ---
 
 # Frontend conventions (`frontend/`)
 
 ## Stack
-React 19, Vite, TypeScript (strict), React Router 7 (data routers), TanStack Query 5, React Hook Form + Zod, plain CSS modules + `src/styles/tokens.css` (from counselqueue-ui-spec design tokens). Tests: Vitest, @testing-library/react, MSW for API mocks. Node 20+.
+React 18.2, Vite 5, TypeScript (strict), React Router 6 (data routers, `createBrowserRouter`), TanStack Query 5, React Hook Form + Zod, plain CSS modules + `src/styles/tokens.css` (from counselqueue-ui-spec design tokens). Tests: Vitest, @testing-library/react 14, MSW 2 for API mocks. Node 20+.
+
+`package.json` pins (do not upgrade React past 18):
+```json
+"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.26.0",
+"@tanstack/react-query": "^5.51.0", "react-hook-form": "^7.52.0", "zod": "^3.23.0", "@hookform/resolvers": "^3.9.0",
+"@types/react": "^18.2.0", "@types/react-dom": "^18.2.0", "vite": "^5.4.0", "@vitejs/plugin-react": "^4.3.0",
+"vitest": "^2.0.0", "@testing-library/react": "^14.3.0", "@testing-library/user-event": "^14.5.0", "@testing-library/jest-dom": "^6.4.0", "jsdom": "^24.0.0", "msw": "^2.3.0", "typescript": "^5.5.0"
+```
+React 18 rules: no APIs newer than 18.x (`use()`, `useActionState`, `useOptimistic`, `<form action>`, ref as a prop). Use `forwardRef` where a ref is passed.
 
 ## Layout
 ```

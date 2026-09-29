@@ -64,6 +64,7 @@ REVIEW = [
     ("counselqueue-ui-spec/SKILL.md", "Token {token} was released — requeue it to call."),
     ("counselqueue-domain/SKILL.md", "inside `token_confirm_desk`"),    # 16
     ("django-backend-conventions/SKILL.md", "delegates to `queue.services.close_centre`"),  # 19
+    ("react-frontend-conventions/SKILL.md", '"react": "^18.2.0"'),       # stack: React 18.2
 ]
 AGENT_MODELS = {"haiku", "sonnet", "opus"}
 VERIFIER_TOOLS = {"Read", "Grep", "Glob", "Bash"}
@@ -154,6 +155,9 @@ def check_focus(errs):
 
 
 def check_review(errs):
+    for f in [SK / "react-frontend-conventions" / "SKILL.md", AG / "react-frontend-dev.md", ROOT / "CLAUDE.md"]:
+        if "React 19" in read(f):
+            errs.append(f"{f.relative_to(ROOT)} still says React 19 (stack is React 18.2)")
     for rel, phrase in REVIEW:
         if phrase not in read(SK / rel):
             errs.append(f"review fix {phrase!r} missing in {rel}")
