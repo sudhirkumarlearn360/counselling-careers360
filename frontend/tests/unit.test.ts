@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { canOpen, defaultPath, NAV } from "../src/lib/nav";
+import { canOpen, defaultPath, navFor, type Role } from "../src/lib/nav";
+import { setPhase2 } from "../src/lib/phase";
 import { normaliseMobile, validEmail, validMobile } from "../src/lib/mobile";
 import { toggleExam } from "../src/features/student/schema";
 import { detailsSchema, goalsSchema } from "../src/features/student/schema";
@@ -22,26 +23,37 @@ describe("normaliseMobile (same fixtures as the backend)", () => {
   });
 });
 
-describe("CQ-3 navigation is built from the role alone", () => {
-  it("matches the domain matrix", () => {
-    expect(NAV.reception.map((n) => n.label)).toEqual(["Hall queue", "Add a student", "Hall board"]);
-    expect(NAV.counsellor.map((n) => n.label)).toEqual(["My queue", "Live session", "My students", "My centres"]);
-    expect(NAV.ops_lead.map((n) => n.label)).toEqual([
+const labels = (role: Role) => navFor(role).map((n) => n.label);
+const ROLES: Role[] = ["ops_lead", "reception", "counsellor"];
+
+describe("CQ-3 navigation is built from the role alone (Phase 1 scope)", () => {
+  it("shows only what is in scope: Hall board, Insights and the ops Hall queue are Phase 2", () => {
+    expect(labels("reception")).toEqual(["Hall queue", "Add a student"]);
+    expect(labels("counsellor")).toEqual(["My queue", "Live session", "My students", "My centres"]);
+    expect(labels("ops_lead")).toEqual(["Live centres", "Centres & dates", "Counsellors", "All students"]);
+  });
+  it("switching Phase 2 on restores the full matrix from the domain skill", () => {
+    setPhase2(true);
+    expect(labels("reception")).toEqual(["Hall queue", "Add a student", "Hall board"]);
+    expect(labels("ops_lead")).toEqual([
       "Live centres", "Centres & dates", "Counsellors", "All students", "Insights", "Hall queue", "Hall board",
     ]);
   });
   it("no role has an empty nav and each has a default screen", () => {
-    for (const role of Object.keys(NAV) as (keyof typeof NAV)[]) {
-      expect(NAV[role].length).toBeGreaterThan(0);
+    for (const role of ROLES) {
+      expect(navFor(role).length).toBeGreaterThan(0);
       expect(canOpen(role, defaultPath(role))).toBe(true);
     }
   });
-  it("blocks screens outside the role; only ops can open a desk", () => {
+  it("blocks screens outside the role or scope; only ops can open a desk", () => {
     expect(canOpen("reception", "/console/students")).toBe(false);
+    expect(canOpen("reception", "/console/board")).toBe(false); // Phase 2
+    expect(canOpen("ops_lead", "/console/insights")).toBe(false); // Phase 2
+    expect(canOpen("ops_lead", "/console/hall")).toBe(false); // Phase 2 for the ops lead
     expect(canOpen("counsellor", "/console/centres")).toBe(false);
     expect(canOpen("counsellor", "/console/desk/3/queue")).toBe(false);
     expect(canOpen("ops_lead", "/console/desk/3/queue")).toBe(true);
-    expect(NAV.ops_lead.some((n) => n.path.includes("/desk/"))).toBe(false); // never a permanent item
+    for (const role of ROLES) expect(navFor(role).some((n) => n.path.includes("/desk/"))).toBe(false);
   });
 });
 

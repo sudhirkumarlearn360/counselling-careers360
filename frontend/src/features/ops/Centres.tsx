@@ -6,8 +6,8 @@ import type { CentreFull } from "../../api/types";
 import { Dialog, Field, errText, useToast } from "../../app/ui";
 import { prettyDate, streamName } from "../../lib/format";
 
-interface Draft { city: string; venue: string; date: string; opens_at: string; closes_at: string; expected_students: string; front_desk_phone: string }
-const blank = (): Draft => ({ city: "", venue: "", date: "", opens_at: "10:00", closes_at: "18:00", expected_students: "", front_desk_phone: "" });
+interface Draft { city: string; venue: string; date: string; opens_at: string; closes_at: string; expected_students: string; front_desk_phone: string; email: string; password: string }
+const blank = (): Draft => ({ city: "", venue: "", date: "", opens_at: "10:00", closes_at: "18:00", expected_students: "", front_desk_phone: "", email: "", password: "" });
 
 export function Centres() {
   const { data, isLoading } = useCentres();
@@ -59,6 +59,7 @@ export function Centres() {
             <h2 style={{ marginTop: 0 }}>{c.city} <span className={`pill ${c.status === "live" ? "ok" : c.status === "closed" ? "bad" : ""}`}>{c.status}</span></h2>
             <p className="muted">{c.venue} · {prettyDate(c.date)} · {c.opens_at}–{c.closes_at}</p>
             <p>{c.counsellor_count} counsellors · {c.expected_students} expected</p>
+            <p className="muted" style={{ margin: "0.25rem 0" }}>Front desk login: {c.front_desk_email || "—"}</p>
             <p style={{ margin: "0.25rem 0" }}>
               Covers: {c.covered_streams.map(streamName).join(", ") || "—"}
             </p>
@@ -67,7 +68,7 @@ export function Centres() {
             )}
             <div className="toolbar" style={{ marginTop: "0.75rem" }}>
               {c.status !== "closed" && (
-                <button className="btn sm" onClick={() => { setError(""); setEditing({ id: c.id, draft: { city: c.city, venue: c.venue, date: c.date, opens_at: c.opens_at, closes_at: c.closes_at, expected_students: String(c.expected_students), front_desk_phone: c.front_desk_phone ?? "" } }); }}>Edit</button>
+                <button className="btn sm" onClick={() => { setError(""); setEditing({ id: c.id, draft: { city: c.city, venue: c.venue, date: c.date, opens_at: c.opens_at, closes_at: c.closes_at, expected_students: String(c.expected_students), front_desk_phone: c.front_desk_phone ?? "", email: c.front_desk_email ?? "", password: "" } }); }}>Edit</button>
               )}
               {c.status === "planned" && <button className="btn sm primary" onClick={() => decide(c, "go-live", false)}>Set live</button>}
               {c.status === "live" && <button className="btn sm danger" onClick={() => decide(c, "close", false)}>Close centre</button>}
@@ -91,6 +92,11 @@ export function Centres() {
           </div>
           <Field label="Expected students" htmlFor="c-exp"><input id="c-exp" className="input" inputMode="numeric" value={editing.draft.expected_students} onChange={(e) => setEditing({ ...editing, draft: { ...editing.draft, expected_students: e.target.value } })} /></Field>
           <Field label="Front desk phone" htmlFor="c-phone"><input id="c-phone" className="input" value={editing.draft.front_desk_phone} onChange={(e) => setEditing({ ...editing, draft: { ...editing.draft, front_desk_phone: e.target.value } })} /></Field>
+          <h3 style={{ marginBottom: "0.25rem" }}>Front desk login</h3>
+          <Field label="Email" htmlFor="c-email"><input id="c-email" className="input" type="email" autoComplete="off" value={editing.draft.email} onChange={(e) => setEditing({ ...editing, draft: { ...editing.draft, email: e.target.value } })} /></Field>
+          <Field label="Password" htmlFor="c-password" hint={editing.id ? "Leave blank to keep the current password." : "At least 8 characters."}>
+            <input id="c-password" className="input" type="password" autoComplete="new-password" value={editing.draft.password} onChange={(e) => setEditing({ ...editing, draft: { ...editing.draft, password: e.target.value } })} />
+          </Field>
           <div className="actions">
             <button className="btn" onClick={() => setEditing(null)}>Cancel</button>
             <button className="btn primary" onClick={save}>Save centre</button>

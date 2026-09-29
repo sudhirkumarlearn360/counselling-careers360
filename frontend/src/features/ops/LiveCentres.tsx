@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useLive } from "../../api/hooks";
 import { minutesLabel, prettyDate, streamName } from "../../lib/format";
 
-const DUTY: Record<string, string> = { on_desk: "On desk", on_break: "On a break", off_duty: "Off duty" };
+const DUTY: Record<string, string> = { on_desk: "On Desk", on_break: "On Break", off_duty: "Off Duty" };
 
 export function LiveCentres() {
   const { data, isLoading } = useLive();

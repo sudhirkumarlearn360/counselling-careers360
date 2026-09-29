@@ -2,6 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll } from "vitest";
 import { session } from "../src/api/client";
+import { setPhase2 } from "../src/lib/phase";
 import { server } from "./utils";
 
 // React logs "not wrapped in act" for updates that resolve between Testing Library polls; the
@@ -18,6 +19,7 @@ afterAll(() => server.close());
 afterEach(() => {
   cleanup(); // unmount first so background polling stops before handlers are reset
   server.resetHandlers();
+  setPhase2(false); // every test starts in Phase 1 scope
   session.clear(); // the in-memory access token must not leak between tests
   window.sessionStorage.clear();
   window.localStorage.clear();

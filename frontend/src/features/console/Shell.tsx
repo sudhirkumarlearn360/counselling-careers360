@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../api/auth";
 import { useLive } from "../../api/hooks";
-import { NAV, type Role } from "../../lib/nav";
+import { navFor, type Role } from "../../lib/nav";
 import "../../styles/console.css";
 
 const ROLE_LABEL: Record<Role, string> = { ops_lead: "Operations lead", reception: "Front desk", counsellor: "Counsellor" };
@@ -33,7 +33,7 @@ export function Shell() {
   const { user, signOut } = useAuth();
   const nav = useNavigate();
   if (!user) return null;
-  const items = NAV[user.role];
+  const items = navFor(user.role);
   return (
     <div className="shell">
       <header className="topbar">

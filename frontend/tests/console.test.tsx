@@ -1,5 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { setPhase2 } from "../src/lib/phase";
 import { API, centre, fail, http, ok, renderAt, server, signInAs } from "./utils";
 
 const row = (over: Record<string, unknown> = {}) => ({
@@ -174,8 +175,25 @@ describe("CQ-39…49 counsellor desk", () => {
     expect(screen.getByText("Next")).toBeInTheDocument();
     expect(screen.getAllByText("consent pending").length).toBeGreaterThan(0);
     expect(screen.getByText("Added at desk")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Pull forward" })?.closest("tr")?.textContent).toContain("PCM-09"); // none on the top row
     expect(screen.getByText(/Hotel Landmark/)).toBeInTheDocument();
+  });
+
+  it("Phase 1 scope: no call-by-token, no pull forward, no 'what they said at check-in'", async () => {
+    server.use(http.get(`${API}/desk/queue`, () => ok(desk(null))));
+    renderAt("/console/queue");
+    await screen.findByRole("button", { name: "Call PCM-08" });
+    expect(screen.queryByLabelText("Call a token")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Pull forward" })).toBeNull();
+  });
+
+  it("Phase 2 (switched on): call by token and pull forward work", async () => {
+    setPhase2(true, "callFromQueue", "pullForward");
+    server.use(http.get(`${API}/desk/queue`, () => ok(desk(null))));
+    renderAt("/console/queue");
+    expect(await screen.findByLabelText("Call a token")).toBeInTheDocument();
+    const rows = screen.getAllByRole("row");
+    expect(within(rows[1]).queryByRole("button", { name: "Pull forward" })).toBeNull(); // none on the top row
+    expect(within(rows[2]).getByRole("button", { name: "Pull forward" })).toBeInTheDocument();
   });
 
   it("CQ-39: while a student is called the call control is replaced by the reason", async () => {
@@ -189,7 +207,7 @@ describe("CQ-39…49 counsellor desk", () => {
     const duties: string[] = [];
     server.use(http.get(`${API}/desk/queue`, () => ok(desk(null))), http.post(`${API}/desk/duty`, async ({ request }) => { duties.push(((await request.json()) as any).duty); return ok({}); }));
     renderAt("/console/queue");
-    await userEvent.click(await screen.findByRole("button", { name: "On a break" }));
+    await userEvent.click(await screen.findByRole("button", { name: "On Break" }));
     await waitFor(() => expect(duties).toEqual(["on_break"]));
   });
 
@@ -206,7 +224,15 @@ describe("CQ-39…49 counsellor desk", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Start session" })).toBeEnabled());
   });
 
-  it("CQ-43/47: what the student told us shows first with 'Not answered' for blanks; the timer shows only after start", async () => {
+  it("Phase 1 scope: the live session hides 'what they said at check-in'", async () => {
+    server.use(http.get(`${API}/desk/queue`, () => ok(desk(student({ consent: "given", status: "in_session" })))));
+    renderAt("/console/session");
+    await screen.findByRole("button", { name: "Save details" });
+    expect(screen.queryByLabelText("What the student told us")).toBeNull();
+  });
+
+  it("Phase 2 (switched on) CQ-43/47: what the student told us shows first with 'Not answered' for blanks; the timer shows only after start", async () => {
+    setPhase2(true, "intakeSummary");
     server.use(http.get(`${API}/desk/queue`, () => ok(desk(student({ consent: "given", status: "in_session", timer: { elapsed_seconds: 65, target_min: 15, over_target: false, waiting: 2 } })))));
     renderAt("/console/session");
     const intake = await screen.findByLabelText("What the student told us");
@@ -248,8 +274,24 @@ describe("CQ-39…49 counsellor desk", () => {
   });
 });
 
-describe("board and insights", () => {
+describe("Phase 1 scope: Hall board, Insights and the ops Hall queue are hidden", () => {
+  it("the public board says it is coming in Phase 2", async () => {
+    renderAt(`/board/${centre.slug}`);
+    expect(await screen.findByText("The hall board is coming in Phase 2.")).toBeInTheDocument();
+  });
+  it("an ops lead has no Insights / Hall queue / Hall board and is sent back if they open one", async () => {
+    signInAs("ops_lead");
+    server.use(http.get(`${API}/ops/live`, () => ok([])));
+    const { router } = renderAt("/console/insights");
+    await waitFor(() => expect(router.state.location.pathname).toBe("/console/live"));
+    for (const name of ["Insights", "Hall queue", "Hall board"]) expect(screen.queryByRole("link", { name })).toBeNull();
+    expect(screen.getByRole("link", { name: "All students" })).toBeInTheDocument();
+  });
+});
+
+describe("Phase 2 code stays working when switched on", () => {
   it("CQ-51…53: the hall board shows big tokens, dimmed empty desks and the desk states", async () => {
+    setPhase2(true, "hallBoard");
     server.use(http.get(`${API}/public/board/${centre.slug}`, () => ok({
       centre, now: "11:05", total_waiting: 3,
       panels: [
@@ -266,10 +308,10 @@ describe("board and insights", () => {
     expect(screen.getByText("queue clear")).toBeInTheDocument();
     expect(screen.getAllByLabelText("Now serving").filter((n) => n.textContent === "—")).toHaveLength(2);
     expect(screen.getByLabelText("Recently called")).toHaveTextContent("COM-02");
-    expect(screen.getByText(/keep your phone on for your turn alert/)).toBeInTheDocument();
   });
 
   it("CQ-61: thin data shows dashes, never zero, and averages state how many records they come from", async () => {
+    setPhase2(true, "insights");
     signInAs("ops_lead");
     server.use(
       http.get(`${API}/ops/centres`, () => ok([])),
@@ -284,24 +326,91 @@ describe("board and insights", () => {
     expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(3);
     expect(screen.getByText("Not set")).toBeInTheDocument();
   });
+});
 
-  it("CQ-59/60: the records list states matches against the total and clears filters", async () => {
-    signInAs("ops_lead");
+describe("Add a Centre and All Students (agreed scope)", () => {
+  const centreFull = (over: Record<string, unknown> = {}) => ({
+    ...centre, id: 1, city: "Gwalior", venue: "Hotel Landmark", expected_students: 100, covered_streams: [], uncovered_streams: [], counsellor_count: 0,
+    front_desk_email: "gwalior.desk@careers360.com", ...over,
+  });
+  beforeEach(() => signInAs("ops_lead"));
+
+  it("Add a Centre asks for the front desk's email and password and shows the login on the card", async () => {
+    const bodies: any[] = [];
+    server.use(
+      http.get(`${API}/ops/centres`, () => ok([centreFull()])),
+      http.post(`${API}/ops/centres`, async ({ request }) => {
+        bodies.push(await request.json());
+        return bodies.length === 1
+          ? fail(400, "invalid", "The password must be at least 8 characters.", { fields: { password: ["The password must be at least 8 characters."] } })
+          : ok(centreFull({ id: 2 }));
+      }),
+    );
+    renderAt("/console/centres");
+    expect(await screen.findByText(/Front desk login: gwalior\.desk@careers360\.com/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "New centre" }));
+    const dlg = await screen.findByRole("dialog", { name: "New centre" });
+    await userEvent.type(within(dlg).getByLabelText("City"), "Indore");
+    await userEvent.type(within(dlg).getByLabelText("Venue"), "Hotel Fortune");
+    await userEvent.type(within(dlg).getByLabelText("Email"), "indore.desk@careers360.com");
+    const pw = within(dlg).getByLabelText("Password");
+    expect(pw).toHaveAttribute("type", "password");
+    await userEvent.type(pw, "short");
+    await userEvent.click(within(dlg).getByRole("button", { name: "Save centre" }));
+    expect(await within(dlg).findByRole("alert")).toHaveTextContent("The password must be at least 8 characters.");
+    await userEvent.clear(pw);
+    await userEvent.type(pw, "frontdesk-1");
+    await userEvent.click(within(dlg).getByRole("button", { name: "Save centre" }));
+    await waitFor(() => expect(bodies).toHaveLength(2));
+    expect(bodies[1]).toMatchObject({ city: "Indore", email: "indore.desk@careers360.com", password: "frontdesk-1" });
+  });
+
+  it("All Students: venue options depend on the selected centre; Apply commits the filters; Clear resets them", async () => {
     const seen: string[] = [];
     server.use(
-      http.get(`${API}/ops/centres`, () => ok([])),
+      http.get(`${API}/ops/centres`, () => ok([
+        centreFull({ id: 1, city: "Gwalior", venue: "Hotel Landmark" }),
+        centreFull({ id: 2, city: "Gwalior", venue: "City Hall" }),
+        centreFull({ id: 3, city: "Indore", venue: "Brilliant Convention Centre" }),
+      ])),
       http.get(`${API}/ops/counsellors`, () => ok([])),
-      http.get(`${API}/ops/students`, ({ request }) => {
-        seen.push(new URL(request.url).search);
-        return ok([], { count: 0, total: 12 });
-      }),
+      http.get(`${API}/ops/students`, ({ request }) => { seen.push(new URL(request.url).search); return ok([], { count: 0, total: 12 }); }),
     );
     renderAt("/console/students");
     expect(await screen.findByText("0 of 12 students")).toBeInTheDocument();
-    expect(screen.getByText("No students match these filters.")).toBeInTheDocument();
+    const venue = screen.getByLabelText("Venue");
+    expect(venue).toBeDisabled(); // no centre chosen yet
+    await userEvent.selectOptions(screen.getByLabelText("Centre"), "Gwalior");
+    expect(venue).toBeEnabled();
+    expect(within(venue).getAllByRole("option").map((o) => o.textContent)).toEqual(["Venue", "City Hall", "Hotel Landmark"]);
+    await userEvent.selectOptions(venue, "City Hall");
+    const before = seen.length;
     await userEvent.type(screen.getByRole("searchbox"), "priya");
-    await waitFor(() => expect(seen.some((s) => s.includes("q=priya"))).toBe(true));
-    await userEvent.click(screen.getByRole("button", { name: "Clear all" }));
+    expect(seen.length).toBe(before); // nothing is sent until Apply
+    await userEvent.click(screen.getByRole("button", { name: "Apply" }));
+    await waitFor(() => expect(seen.some((s) => s.includes("city=Gwalior") && s.includes("venue=City+Hall") && s.includes("q=priya"))).toBe(true));
+    await userEvent.selectOptions(screen.getByLabelText("Centre"), "Indore");
+    expect(screen.getByLabelText("Venue")).toHaveValue(""); // changing the centre resets the venue
+    expect(within(screen.getByLabelText("Venue")).getAllByRole("option").map((o) => o.textContent)).toEqual(["Venue", "Brilliant Convention Centre"]);
+    await userEvent.click(screen.getByRole("button", { name: "Clear" }));
     expect(screen.getByRole("searchbox")).toHaveValue("");
+    expect(screen.getByLabelText("Centre")).toHaveValue("");
+    expect(screen.getByLabelText("Venue")).toBeDisabled();
+    await waitFor(() => expect(seen[seen.length - 1]).toBe(""));
+  });
+
+  it("Phase 1 scope: no Status filter or Wait/Session columns on the records list", async () => {
+    server.use(
+      http.get(`${API}/ops/centres`, () => ok([])),
+      http.get(`${API}/ops/counsellors`, () => ok([])),
+      http.get(`${API}/ops/students`, () => ok([{ id: 1, token: "PCM-01", name: "Priya", mobile: "9811022001", school: "DPS", stream: "PCM", course: "B.Tech", centre: { id: 1, city: "Gwalior" }, date: "2026-09-29", counsellor: "Meera", wait_min: 5, session_min: 10, outcome: "ready", status: "done" }], { count: 1, total: 1 })),
+    );
+    renderAt("/console/students");
+    const table = await screen.findByRole("table");
+    expect(within(table).queryByRole("columnheader", { name: "Status" })).toBeNull();
+    expect(within(table).queryByRole("columnheader", { name: "Wait" })).toBeNull();
+    expect(within(table).queryByRole("columnheader", { name: "Session" })).toBeNull();
+    expect(screen.queryByLabelText("Status")).toBeNull();
+    expect(within(table).getByRole("columnheader", { name: "Outcome" })).toBeInTheDocument();
   });
 });

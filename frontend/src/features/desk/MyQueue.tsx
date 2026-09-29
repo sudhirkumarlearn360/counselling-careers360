@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 import { useDesk, useDeskAction } from "../../api/hooks";
 import { errText, useToast } from "../../app/ui";
 import { minutesLabel, prettyDate, streamName } from "../../lib/format";
+import { phase } from "../../lib/phase";
 import { useDeskContext } from "./useDeskContext";
 
 const DUTIES = [
-  { v: "on_desk", l: "On desk" },
-  { v: "on_break", l: "On a break" },
-  { v: "off_duty", l: "Off duty" },
+  { v: "on_desk", l: "On Desk" },
+  { v: "on_break", l: "On Break" },
+  { v: "off_duty", l: "Off Duty" },
 ] as const;
 
 export function MyQueue() {
@@ -77,6 +78,7 @@ export function MyQueue() {
             <button className="btn primary" disabled={!data.next_token || act.isPending} onClick={() => run("desk/call-next")}>
               {data.next_token ? `Call ${data.next_token}` : "No one to call"}
             </button>
+            {phase.callFromQueue && (
             <form
               style={{ display: "flex", gap: "0.5rem" }}
               onSubmit={async (e) => {
@@ -87,6 +89,7 @@ export function MyQueue() {
               <input className="input" aria-label="Call a token" placeholder="Token, e.g. PCM-07" value={token} onChange={(e) => setToken(e.target.value)} />
               <button className="btn" type="submit" disabled={!token.trim()}>Call</button>
             </form>
+            )}
           </div>
         )}
       </div>
@@ -106,7 +109,7 @@ export function MyQueue() {
                   <td>{r.klass || "—"}</td>
                   <td>{r.waited_min} min</td>
                   <td>{r.source === "desk" ? "Added at desk" : "Self check-in"}</td>
-                  <td>{!r.next && <button className="btn sm" onClick={() => run(`desk/students/${r.id}/pull-forward`, undefined, `${r.token} is next.`)}>Pull forward</button>}</td>
+                  <td>{phase.pullForward && !r.next && <button className="btn sm" onClick={() => run(`desk/students/${r.id}/pull-forward`, undefined, `${r.token} is next.`)}>Pull forward</button>}</td>
                 </tr>
               ))}
             </tbody>

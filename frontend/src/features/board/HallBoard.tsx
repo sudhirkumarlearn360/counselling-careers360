@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useBoard } from "../../api/hooks";
+import { phase } from "../../lib/phase";
 import "../../styles/board.css";
 
 export function BoardView({ slug }: { slug: string }) {
@@ -42,5 +43,12 @@ export function BoardView({ slug }: { slug: string }) {
 
 export function HallBoard() {
   const { centreSlug = "" } = useParams();
+  if (!phase.hallBoard)
+    return (
+      <div className="board">
+        <h1>Hall board</h1>
+        <p>The hall board is coming in Phase 2.</p>
+      </div>
+    );
   return <BoardView slug={centreSlug} />;
 }

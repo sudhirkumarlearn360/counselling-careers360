@@ -9,6 +9,8 @@ the hall board; counsellors run their desk; the front desk and operations lead s
 - `frontend/` — React 18.2 + Vite + TypeScript (Node 18.20.3): responsive student flow, staff console, hall board.
 - `.claude/` — the Claude Code kit (skills + agents) that encodes the PRD; `python3 scripts/check_kit.py` validates it. Project map: [CLAUDE.md](CLAUDE.md).
 
+**Scope:** Phase 1 is live in the UI; Phase 2 items are built but hidden — see [docs/PHASES.md](docs/PHASES.md).
+
 ## Run it locally
 
 ```bash
@@ -41,8 +43,8 @@ Demo entry points (after `seed_demo`):
 ## Checks
 
 ```bash
-cd backend  && .venv/bin/pytest -q && .venv/bin/ruff check .            # 586 tests
-cd frontend && npm test && npm run typecheck && npm run lint && npm run build   # 60 tests
+cd backend  && .venv/bin/pytest -q && .venv/bin/ruff check .            # 596 tests
+cd frontend && npm test && npm run typecheck && npm run lint && npm run build   # 68 tests
 python3 scripts/smoke_e2e.py                                            # a whole counselling day over HTTP (backend running)
 ```
 

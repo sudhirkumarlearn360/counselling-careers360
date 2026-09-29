@@ -5,6 +5,7 @@ import type { StudentRecord } from "../../api/types";
 import { Field, errText, useToast } from "../../app/ui";
 import { ApiError } from "../../api/client";
 import { CLARITY, CLASSES, OUTCOMES, STREAMS, elapsedLabel, streamName } from "../../lib/format";
+import { phase } from "../../lib/phase";
 import { useDeskContext } from "./useDeskContext";
 
 const NA = "Not answered";
@@ -109,7 +110,7 @@ export function LiveSession() {
       <h1>Live session · {s.token}</h1>
       <p className="muted">{s.name} · {streamName(s.stream)} · {s.status === "called" ? "Called — not started" : "In session"}</p>
       <Timer s={s} />
-      <Intake s={s} />
+      {phase.intakeSummary && <Intake s={s} />}
 
       <div className="card">
         {pending && (

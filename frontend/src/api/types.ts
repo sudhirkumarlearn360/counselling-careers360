@@ -219,6 +219,7 @@ export interface CentreFull extends CentreLite {
   covered_streams: string[];
   uncovered_streams: string[];
   counsellor_count: number;
+  front_desk_email: string;
 }
 export interface Posting {
   id: number;

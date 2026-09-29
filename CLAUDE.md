@@ -46,8 +46,11 @@ Precedence: Agent-call `model` > agent `model:` > `CLAUDE_CODE_SUBAGENT_MODEL` >
 
 **Plans carry the choice:** every task in a `docs/superpowers/plans/*` plan has a `**Model:** haiku|sonnet|opus` line under its title, picked with this table. The subagent-driven-development controller dispatches that task's implementer with that model.
 
+## Scope by phase
+See `docs/PHASES.md`: Hall Board, Student Status, Insights, ops Hall Queue, Page Editor, call-from-queue, pull forward, intake summary and student timing are Phase 2 / Future (built, hidden behind `frontend/src/lib/phase.ts`).
+
 ## Status
-All 61 stories are built: backend (47 routes, 586 tests) and frontend (60 tests), verified end to end with `scripts/smoke_e2e.py` and a real-browser responsive audit of the student screens (320–1280px). Run instructions: README.md.
+All 61 stories are built: backend (47 routes, 596 tests) and frontend (68 tests), verified end to end with `scripts/smoke_e2e.py` and a real-browser responsive audit of the student screens (320–1280px). Run instructions: README.md.
 
 ## Original build roadmap (done)
 1. Foundations: scaffold backend + frontend, settings, MySQL, auth, seed_demo, CI commands.
