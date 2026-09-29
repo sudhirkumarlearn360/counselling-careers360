@@ -12,7 +12,7 @@ All sends go through `apps.messaging.services.send_template(student, key, **vars
 class MessagingProvider(Protocol):
     def send(self, to: str, body: str) -> SendResult: ...  # SendResult(provider_id, status in queued|sent|delivered|failed)
 ```
-`StubProvider` logs to the console and returns `sent`, or `failed` if `to in settings.MESSAGING_STUB_FAIL_TO`. The delivery-status webhook (future real provider) goes to `POST /api/messaging/status/`, which updates `Message.status`.
+`StubProvider` logs to the console and returns `sent`, or `failed` if `to in settings.MESSAGING_STUB_FAIL_TO`. The delivery-status webhook (future real provider) goes to `POST /api/1/webhooks/messaging/status`, which updates `Message.status`.
 
 ## Templates (key → trigger → body)
 Variables: `{city} {token} {counsellor} {desk} {link} {code} {minutes} {recalls} {close_time}`. `{link}` = the student's live token URL `/t/{access_key}` (CQ-26).
@@ -36,4 +36,4 @@ Inbound "YES" (future provider webhook) → `record_consent(student, by=None)`. 
 4-digit code, stored hashed with `expires_at` = now + `settings.OTP_TTL_MIN` (10). Resend is allowed after `settings.OTP_RESEND_SEC` (30). `settings.OTP_MAX_ATTEMPTS` (5) wrong tries invalidate the code. A wrong code shows "That code doesn't match — check your WhatsApp". In DEBUG/stub mode, the code `settings.OTP_STUB_CODE` (e.g. "1234") is accepted, matching the prototype shortcut. The verification result is a short-lived, single-use, signed `verification_id` bound to the normalised mobile and centre (`{mobile, centre_id, nonce}`). The check-in POST must present it, and its mobile must equal the submitted mobile, otherwise it is rejected. A duplicate response (CQ-20) returns the existing token's live status (and `access_key`) only after this check passes. Throttle `public/otp/send` (per mobile: 1 per `OTP_RESEND_SEC`, 5 per hour; per IP: 20 per hour) and `public/centres/{slug}/checkins/` (per IP) with DRF throttles.
 
 ## Delivery failure (CQ-58)
-A `Message` with status `failed` for key `turn_called` sets a flag the hall queue and desk show: "WhatsApp didn't reach them — {template label}. Call out their token." Resend = `POST /api/students/{id}/messages/{message_id}/resend/`. It is never a status change.
+A `Message` with status `failed` for key `turn_called` sets a flag the hall queue and desk show: "WhatsApp didn't reach them — {template label}. Call out their token." Resend = `POST /api/1/hall/students/<student_id>/messages/<message_id>/resend` (reception) or `POST /api/1/desk/students/<student_id>/messages/<message_id>/resend` (counsellor). It is never a status change.

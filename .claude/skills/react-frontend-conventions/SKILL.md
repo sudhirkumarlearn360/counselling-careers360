@@ -23,7 +23,7 @@ React 18 rules: no APIs newer than 18.x (`use()`, `useActionState`, `useOptimist
 ```
 frontend/src/
   app/        router.tsx, providers.tsx, RequireRole.tsx
-  api/        client.ts (fetch wrapper, JWT, error → {code,message}), queryKeys.ts, one hooks file per resource (useHall.ts, useDeskQueue.ts, useToken.ts …)
+  api/        client.ts (fetch wrapper, base `VITE_API_URL` = `http://localhost:8000/api/1`, paths exactly as the backend route table, no trailing slash; JWT; error → {code,message}), queryKeys.ts, one hooks file per resource (useHall.ts, useDeskQueue.ts, useToken.ts …)
   features/
     student/  Landing, DetailsStep, GoalsStep, VerifyStep, TokenPage, checkinSchema.ts
     auth/     SignIn, useAuth

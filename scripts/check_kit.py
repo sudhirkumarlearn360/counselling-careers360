@@ -44,7 +44,7 @@ FOCUS = [
 REVIEW = [
     ("counselqueue-domain/SKILL.md", "`Posting`"),                      # 1 roster
     ("counselqueue-queue-engine/SKILL.md", "`Posting`"),
-    ("django-backend-conventions/SKILL.md", "postings/"),
+    ("django-backend-conventions/SKILL.md", "ops/counsellors/<counsellor_id>/postings"),
     ("counselqueue-queue-engine/SKILL.md", "`priority = 0`"),           # 2
     ("counselqueue-queue-engine/SKILL.md", "NoCounsellorForStream"),    # 3
     ("counselqueue-ui-spec/SKILL.md", "No counsellor for your stream is on desk yet"),
@@ -57,7 +57,9 @@ REVIEW = [
     ("counselqueue-queue-engine/SKILL.md", "`SessionRecord`"),
     ("counselqueue-messaging/SKILL.md", "single-use"),                  # 8
     ("counselqueue-messaging/SKILL.md", "bound to the normalised mobile"),
-    ("django-backend-conventions/SKILL.md", "GET students/{id}/"),      # 9
+    ("django-backend-conventions/SKILL.md", "hall/students/<student_id>"),
+    ("django-backend-conventions/SKILL.md", "mysqlclient==2.1.0"),
+    ("django-backend-conventions/SKILL.md", "APPEND_SLASH = False"),      # 9
     ("counselqueue-queue-engine/SKILL.md", "## Metrics"),               # 10
     ("counselqueue-queue-engine/SKILL.md", "remain actionable"),        # 13
     ("counselqueue-queue-engine/SKILL.md", "Token {token} was released — requeue it to call."),  # 15
