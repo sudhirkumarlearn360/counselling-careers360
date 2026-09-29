@@ -41,7 +41,7 @@ frontend/src/
 - Navigation comes from `lib/nav.ts` (the role matrix in counselqueue-domain). `RequireRole` redirects unknown/forbidden routes to the role's default view (CQ-3). Sign out: clear the query cache and tokens, then `navigate('/console/login', {replace: true})` (CQ-4).
 - Forms: Zod schemas mirror counselqueue-ui-spec rules and messages exactly. Show all errors at once, and keep values. The multi-step student form keeps state in one `useForm` across steps.
 - Copy comes verbatim from counselqueue-ui-spec. Server error `message` is shown as returned.
-- Student pages: mobile-first, 16px gutters, no horizontal scroll at 320px, tap targets ≥44px, small bundle (lazy-load the console and board routes).
+- Student pages are **fully responsive** (user priority): mobile-first, 16px gutters; a single column below 600px; from 600px up, a centred card with max-width 560px (the token page may use two columns ≥900px: token card + status/help); no horizontal scroll at any width from 320px to 1920px; tap targets ≥44px; type in rem with `clamp()`; images/SVG `max-width:100%`; respect `prefers-reduced-motion`; small bundle (lazy-load the console and board routes). Test at 320, 768 and 1280.
 - Hall board: full-screen route with no auth chrome; token numbers use `clamp()` to stay readable across a hall.
 - Accessibility: labels on every input, `aria-live="polite"` for status changes on the token page and queue.
 

@@ -18,6 +18,10 @@
 - Commit per story group. **Backend agents `git add backend/` only; frontend agents `git add frontend/` only** (they run in parallel in one working tree). If a commit hits `index.lock`, retry after 2s.
 - Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
+## User priorities (2026-09-29)
+- **Schema first.** The data model is the priority. Task 1's review is a dedicated deep schema review (opus): every CQ story's fields, constraints, indexes, FK on_delete, nullability, enums, and the MySQL types. Later tasks must not change the schema without a migration and a line in `backend/SCHEMA.md` (an ER summary kept current).
+- **Student frontend is fully responsive.** The student flow (`/c/:centreSlug`, `/t/:accessKey`) must work from 320px phones through tablets to desktop: fluid layout, a single column under 600px, a centred card up to 560px wide on larger screens, no horizontal scroll at any width, tap targets ≥44px, and font sizes in rem with `clamp()`. F2 tests assert the layout at 320, 768 and 1280 widths (matchMedia/resize) and that nothing overflows.
+
 ## Review Focus
 1. Two check-ins racing at one centre → distinct tokens; same mobile → one token + DuplicateToken (B3 test, real MySQL, `TransactionTestCase`).
 2. Role scoping across every endpoint → role × endpoint matrix test (B1 creates it, and each later B task adds its endpoints).
