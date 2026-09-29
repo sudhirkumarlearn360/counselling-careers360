@@ -1,26 +1,33 @@
-"""Base settings shared by every environment. Values come from backend/.env."""
+"""Base settings shared by every environment. Values come from backend/.env (python-dotenv)."""
 
+import os
 from datetime import timedelta
 from pathlib import Path
 
-import environ
+from dotenv import load_dotenv
+
+from config.settings.database import mysql_alias
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(BASE_DIR / ".env")
 
-env = environ.Env(
-    DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, []),
-    CORS_ALLOWED_ORIGINS=(list, []),
-    MESSAGING_STUB_FAIL_TO=(list, []),
-    OTP_TTL_MIN=(int, 10),
-    OTP_RESEND_SEC=(int, 30),
-    OTP_MAX_ATTEMPTS=(int, 5),
-)
-environ.Env.read_env(BASE_DIR / ".env")
 
-SECRET_KEY = env("SECRET_KEY")
-DEBUG = env("DEBUG")
-ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+def env_bool(name: str, default: bool = False) -> bool:
+    return os.getenv(name, str(default)).strip().lower() in ("1", "true", "yes", "on")
+
+
+def env_list(name: str, default: str = "") -> list:
+    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
+
+
+def env_int(name: str, default: int) -> int:
+    return int(os.getenv(name, str(default)))
+
+
+SECRET_KEY = os.getenv("SECRET_KEY", "")
+DEBUG = env_bool("DEBUG")
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
+APPEND_SLASH = False  # routes have no trailing slash (django-backend-conventions "API routes")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -73,15 +80,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {"default": env.db("DATABASE_URL")}
-DATABASES["default"]["OPTIONS"] = {
-    "charset": "utf8mb4",
-    "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
-}
-DATABASES["default"]["TEST"] = {
-    "NAME": "test_counselqueue",
-    "CHARSET": "utf8mb4",
-    "COLLATION": "utf8mb4_unicode_ci",
+# Writes and locking reads use "default"; read-only report selectors may use "slave".
+DATABASES = {
+    "default": mysql_alias("MASTER_DB", test={"NAME": "test_counselqueue"}),
+    "slave": mysql_alias("SLAVE_DB", test={"MIRROR": "default"}),
 }
 
 AUTH_USER_MODEL = "accounts.StaffUser"
@@ -103,7 +105,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- CORS -----------------------------------------------------------------
-CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
+CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS")
 
 # --- DRF / JWT ------------------------------------------------------------
 REST_FRAMEWORK = {
@@ -127,18 +129,18 @@ SIMPLE_JWT = {
 LOGIN_HELPDESK_AFTER_FAILURES = 3
 
 # --- Messaging (counselqueue-messaging) -----------------------------------
-MESSAGING_PROVIDER = env("MESSAGING_PROVIDER", default="apps.messaging.providers.stub.StubProvider")
-MESSAGING_STUB_FAIL_TO = env("MESSAGING_STUB_FAIL_TO")
+MESSAGING_PROVIDER = os.getenv("MESSAGING_PROVIDER", "apps.messaging.providers.stub.StubProvider")
+MESSAGING_STUB_FAIL_TO = env_list("MESSAGING_STUB_FAIL_TO")
 
 # --- OTP (CQ-18) ----------------------------------------------------------
-OTP_TTL_MIN = env("OTP_TTL_MIN")
-OTP_RESEND_SEC = env("OTP_RESEND_SEC")
-OTP_MAX_ATTEMPTS = env("OTP_MAX_ATTEMPTS")
-OTP_STUB_CODE = env("OTP_STUB_CODE", default="")
+OTP_TTL_MIN = env_int("OTP_TTL_MIN", 10)
+OTP_RESEND_SEC = env_int("OTP_RESEND_SEC", 30)
+OTP_MAX_ATTEMPTS = env_int("OTP_MAX_ATTEMPTS", 5)
+OTP_STUB_CODE = os.getenv("OTP_STUB_CODE", "")
 
 # --- seed_demo (non-DEBUG passwords come only from env) -------------------
-SEED_ADMIN_PASSWORD = env("SEED_ADMIN_PASSWORD", default="")
-SEED_STAFF_PASSWORD = env("SEED_STAFF_PASSWORD", default="")
+SEED_ADMIN_PASSWORD = os.getenv("SEED_ADMIN_PASSWORD", "")
+SEED_STAFF_PASSWORD = os.getenv("SEED_STAFF_PASSWORD", "")
 
 LOGGING = {
     "version": 1,

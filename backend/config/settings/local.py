@@ -1,5 +1,5 @@
 from .base import *  # noqa: F401,F403
-from .base import env
+from .base import env_bool, env_list
 
-DEBUG = env("DEBUG", default=True)
-ALLOWED_HOSTS = env("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
+DEBUG = env_bool("DEBUG", default=True)
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1")

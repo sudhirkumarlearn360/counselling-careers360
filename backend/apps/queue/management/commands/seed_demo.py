@@ -9,8 +9,10 @@ Passwords: `admin123` / `desk123` only when DEBUG; otherwise SEED_ADMIN_PASSWORD
 from the environment, or an unusable password when those are unset.
 """
 
+from __future__ import annotations
+
 import datetime as dt
-from typing import Any, Optional
+from typing import Any
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -404,7 +406,7 @@ class Command(BaseCommand):
         return out
 
     # --- staff users --------------------------------------------------------
-    def _password(self, admin: bool) -> Optional[str]:
+    def _password(self, admin: bool) -> str | None:
         if settings.DEBUG:
             return "admin123" if admin else "desk123"
         return (settings.SEED_ADMIN_PASSWORD if admin else settings.SEED_STAFF_PASSWORD) or None

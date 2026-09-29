@@ -1,15 +1,16 @@
-"""Root URLs. Each app's API is mounted under /api/ by later tasks (B1-B7)."""
+"""Root URLs: one module per API area (area = who calls it). Each module declares full
+`api/<int:version>/<area>/...` paths itself; see backend/API_ROUTES.md for the contract."""
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 
-urlpatterns = [
-    path("admin/", admin.site.urls),
-    # path("api/auth/", include("apps.accounts.urls")),
-    # path("api/", include("apps.centres.urls")),
-    # path("api/", include("apps.counsellors.urls")),
-    # path("api/", include("apps.queue.urls")),
-    # path("api/messaging/", include("apps.messaging.urls")),
-    # path("api/insights/", include("apps.insights.urls")),
-    # path("api/public/", include("apps.public.urls")),
+API_AREA_MODULES = [
+    "apps.accounts.urls",  # auth
+    "apps.public.urls",  # public
+    "apps.ops.urls",  # ops
+    "apps.hall.urls",  # hall
+    "apps.desk.urls",  # desk
+    "apps.messaging.urls",  # webhooks
 ]
+
+urlpatterns = [path("admin/", admin.site.urls)] + [path("", include(module)) for module in API_AREA_MODULES]

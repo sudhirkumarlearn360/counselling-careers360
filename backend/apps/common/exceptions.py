@@ -5,7 +5,9 @@ Services raise ``DomainError`` subclasses (e.g. ``apps.queue.exceptions``) with 
 counselqueue-ui-spec string as ``message``; they map to HTTP 400.
 """
 
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from rest_framework import exceptions as drf_exceptions
 from rest_framework import status
@@ -19,7 +21,7 @@ class DomainError(Exception):
     status_code = status.HTTP_400_BAD_REQUEST
 
     def __init__(
-        self, message: Optional[str] = None, code: Optional[str] = None, data: Optional[dict[str, Any]] = None
+        self, message: str | None = None, code: str | None = None, data: dict[str, Any] | None = None
     ):
         self.message = message if message is not None else self.message
         if code is not None:
