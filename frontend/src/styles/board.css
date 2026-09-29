@@ -1,0 +1,15 @@
+/* Hall display board: full screen, no chrome, token numbers readable across a hall. */
+.board { min-height: 100dvh; background: #0a1626; color: #e6eef8; display: flex; flex-direction: column; padding: clamp(0.75rem, 2vw, 2rem); gap: clamp(0.75rem, 2vw, 1.5rem); }
+.board header { display: flex; flex-wrap: wrap; gap: 0.5rem 2rem; align-items: baseline; justify-content: space-between; }
+.board h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(1.5rem, 4vw, 3rem); margin: 0; }
+.board .clock { font-size: clamp(1.25rem, 3vw, 2.25rem); }
+.panels { display: grid; gap: clamp(0.75rem, 1.5vw, 1.25rem); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); flex: 1; }
+.panel { background: #122238; border: 1px solid #22354f; border-radius: 20px; padding: clamp(0.75rem, 2vw, 1.5rem); display: flex; flex-direction: column; gap: 0.5rem; }
+.panel.dim { opacity: 0.55; }
+.panel .desk { font-size: clamp(1rem, 2vw, 1.5rem); font-weight: 700; }
+.panel .who { color: #9aaec6; }
+.panel .serving { font-family: var(--serif); font-size: clamp(2.75rem, 9vw, 6rem); line-height: 1; overflow-wrap: anywhere; }
+.panel .line { font-size: clamp(1rem, 2vw, 1.5rem); color: #f8c76a; }
+.recent { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.recent span.tok { font-family: var(--serif); font-size: clamp(1.25rem, 3vw, 2rem); background: #16273d; padding: 0.125rem 0.75rem; border-radius: 12px; }
+.board footer { color: #9aaec6; font-size: clamp(0.875rem, 1.6vw, 1.25rem); }

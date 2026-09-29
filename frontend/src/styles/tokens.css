@@ -1,0 +1,25 @@
+/* Design tokens copied from the prototypes (.claude/skills/counselqueue-ui-spec/references/design-tokens.md). */
+:root {
+  --navy: #12356b; --blue: #2b6cb8; --sky: #e9f1fb; --paper: #f4f8fd; --card: #ffffff;
+  --amber: #d98a16; --amber-soft: #fbefd9; --rose: #b3261e; --rose-soft: #fbe7e5;
+  --ink: #0f1f35; --muted: #5a6d85; --line: #dce6f2; --line-strong: #bfd0e4;
+  --ok: #12795c; --ok-soft: #ddf1ea;
+  --r-s: 6px; --r-m: 12px; --r-l: 20px;
+  --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --shadow: 0 1px 2px rgba(18, 43, 39, 0.06), 0 8px 24px -16px rgba(18, 43, 39, 0.35);
+  /* Careers360 student brand */
+  --c360-red: #c0392b; --c360-red-d: #992d22; --c360-rose: #e85d4a; --c360-gold: #f39c12;
+  --c360-gold-lt: #f8c76a; --c360-peach: #ff7f5c; --c360-cream: #fffbf8; --c360-warm: #fff3ef;
+  --c360-step-line: #f5c6be; --c360-sel-bg: #fff0ec;
+  --brand-gradient: linear-gradient(120deg, #c0392b 0%, #e85d3a 55%, #f39c12 100%);
+  --tap: 44px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --navy: #8fb8ec; --blue: #a8cbf3; --sky: #16273d; --paper: #0a1626; --card: #122238;
+    --ink: #e6eef8; --muted: #9aaec6; --line: #22354f; --line-strong: #33496a;
+    --amber-soft: #3a2d10; --rose-soft: #3b1b18; --ok-soft: #0f2e26;
+    --c360-cream: #1a1210; --c360-warm: #241815; --c360-sel-bg: #33201b; --c360-step-line: #5a2f28;
+  }
+}
