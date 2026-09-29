@@ -115,6 +115,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "EXCEPTION_HANDLER": "apps.common.exceptions.exception_handler",
+    "DEFAULT_THROTTLE_RATES": {"login": "10/min", "logout": "30/min"},
 }
 
 SIMPLE_JWT = {

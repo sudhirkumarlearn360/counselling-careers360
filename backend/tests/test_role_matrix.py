@@ -20,7 +20,7 @@ def row(method, url, anonymous, ops_lead, reception, counsellor):
 
 MATRIX = [
     row("GET", "/api/1/auth/me", 401, 200, 200, 200),
-    row("POST", "/api/1/auth/logout", 401, 400, 400, 400),  # 400 = signed in, no refresh token sent
+    row("POST", "/api/1/auth/logout", 400, 400, 400, 400),  # open to anyone; 400 = no refresh token sent
     row("GET", "/api/1/ops/live", 401, 200, 403, 403),
 ]
 

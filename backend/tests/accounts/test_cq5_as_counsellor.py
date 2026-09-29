@@ -9,8 +9,6 @@ from apps.accounts.permissions import RoleIn
 from apps.common.views import ApiView
 from tests.conftest import client_for
 
-pytestmark = pytest.mark.django_db
-
 
 class Probe(AsCounsellorMixin, ApiView):
     permission_classes = [RoleIn("counsellor", "ops_lead")]
@@ -98,3 +96,15 @@ def test_cq5_role_in_rejects_unknown_role_names():
 def test_cq5_ops_lead_may_pass_the_counsellor_of_a_client_helper(users, counsellor):
     resp = client_for(users["ops_lead"]).get(f"/api/1/test/desk?as_counsellor={counsellor.id}")
     assert resp.json()["data"]["on_behalf_of"] == counsellor.id
+
+
+def test_cq5_counsellor_role_without_linked_counsellor_is_403_role_not_allowed():
+    from types import SimpleNamespace
+
+    from rest_framework.exceptions import PermissionDenied
+
+    mixin = AsCounsellorMixin()
+    request = SimpleNamespace(user=SimpleNamespace(role="counsellor", counsellor=None), query_params={})
+    with pytest.raises(PermissionDenied) as exc:
+        mixin._resolve_desk_context(request)
+    assert exc.value.get_codes() == "role_not_allowed"

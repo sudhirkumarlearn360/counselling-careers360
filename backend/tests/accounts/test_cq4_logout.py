@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.test import APIClient
 
-from apps.queue.models import Student  # noqa: F401  (logout must not touch student state)
+from apps.queue.models import Student
 
 pytestmark = pytest.mark.django_db
 
@@ -40,24 +40,61 @@ def test_cq4_logout_requires_refresh_token(users):
     assert resp.status_code == 400 and resp.json()["code"] == "refresh_required"
 
 
-def test_cq4_logout_requires_sign_in(users):
+def test_cq4_logout_works_with_no_authorization_header(users):
     tokens = sign_in()
     assert (
         APIClient().post("/api/1/auth/logout", {"refresh": tokens["refresh"]}, format="json").status_code
+        == 200
+    )
+    assert (
+        APIClient().post("/api/1/auth/refresh", {"refresh": tokens["refresh"]}, format="json").status_code
         == 401
     )
 
 
-def test_cq4_cannot_blacklist_someone_elses_token(users):
-    mine = sign_in()
-    theirs = sign_in("desk@careers360.com")
+def test_cq4_logout_works_with_an_expired_access_token(users):
+    import datetime as dt
+
+    from rest_framework_simplejwt.tokens import AccessToken
+
+    tokens = sign_in()
+    expired = AccessToken.for_user(users["counsellor"])
+    expired.set_exp(lifetime=-dt.timedelta(hours=1))
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION=f"Bearer {mine['access']}")
-    assert client.post("/api/1/auth/logout", {"refresh": theirs["refresh"]}, format="json").status_code == 400
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {expired}")
+    assert client.post("/api/1/auth/logout", {"refresh": tokens["refresh"]}, format="json").status_code == 200
     assert (
-        APIClient().post("/api/1/auth/refresh", {"refresh": theirs["refresh"]}, format="json").status_code
-        == 200
+        APIClient().post("/api/1/auth/refresh", {"refresh": tokens["refresh"]}, format="json").status_code
+        == 401
     )
+
+
+def test_cq4_invalid_token_still_200_and_same_body_as_valid(users):
+    tokens = sign_in()
+    good = APIClient().post("/api/1/auth/logout", {"refresh": tokens["refresh"]}, format="json")
+    bad = APIClient().post("/api/1/auth/logout", {"refresh": "not.a.token"}, format="json")
+    again = APIClient().post("/api/1/auth/logout", {"refresh": tokens["refresh"]}, format="json")
+    assert good.status_code == bad.status_code == again.status_code == 200
+    assert good.json() == bad.json() == again.json()
+
+
+def test_cq4_logout_is_throttled(users, settings):
+    settings.REST_FRAMEWORK = {
+        **settings.REST_FRAMEWORK,
+        "DEFAULT_THROTTLE_RATES": {**settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"], "logout": "2/min"},
+    }
+    codes = [
+        APIClient().post("/api/1/auth/logout", {"refresh": "x"}, format="json").status_code for _ in range(3)
+    ]
+    assert codes == [200, 200, 429]
+
+
+def test_cq4_refresh_for_inactive_user_is_401_not_403(users):
+    tokens = sign_in()
+    users["counsellor"].is_active = False
+    users["counsellor"].save()
+    resp = APIClient().post("/api/1/auth/refresh", {"refresh": tokens["refresh"]}, format="json")
+    assert resp.status_code == 401 and resp.json()["code"] == "token_not_valid"
 
 
 def test_cq4_logout_twice_is_harmless(users):

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from rest_framework import status
-from rest_framework.exceptions import APIException, ValidationError
+from rest_framework.exceptions import APIException, AuthenticationFailed
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
@@ -11,6 +11,7 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts import selectors, services
+from apps.accounts.throttles import SettingsScopedRateThrottle
 from apps.common.exceptions import DomainError
 from apps.common.views import ApiView
 
@@ -18,6 +19,8 @@ from apps.common.views import ApiView
 class LoginView(ApiView):
     authentication_classes = []
     permission_classes = [AllowAny]
+    throttle_classes = [SettingsScopedRateThrottle]
+    throttle_scope = "login"
 
     def post(self, request, **kwargs):
         user, refresh = services.sign_in(request.data.get("email"), request.data.get("password"))
@@ -49,7 +52,7 @@ class RefreshView(ApiView):
         serializer = TokenRefreshSerializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-        except TokenError as exc:
+        except (TokenError, AuthenticationFailed) as exc:
             raise RefreshTokenInvalid() from exc
         return Response({"data": serializer.validated_data})
 
@@ -60,20 +63,21 @@ class RefreshRequired(DomainError):
 
 
 class LogoutView(ApiView):
-    permission_classes = [IsAuthenticated]
+    """Open to anyone holding a refresh token, so sign-out works after the access token expired (CQ-4)."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = [SettingsScopedRateThrottle]
+    throttle_scope = "logout"
 
     def post(self, request, **kwargs):
         raw = request.data.get("refresh")
         if not raw or not isinstance(raw, str):
             raise RefreshRequired()
         try:
-            token = RefreshToken(raw)
+            RefreshToken(raw).blacklist()
         except TokenError:
-            # Expired or already blacklisted: nothing left to invalidate, so signing out is a success.
-            return Response({"data": {"signed_out": True}})
-        if str(token.get("user_id")) != str(request.user.pk):
-            raise ValidationError({"refresh": ["That token belongs to another account."]})
-        token.blacklist()
+            pass  # invalid, expired or already blacklisted: same answer, so validity is not revealed
         return Response({"data": {"signed_out": True}})
 
 

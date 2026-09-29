@@ -14,6 +14,15 @@ from apps.counsellors.models import Counsellor, Duty, Posting
 PASSWORD = "desk123"
 
 
+@pytest.fixture(autouse=True)
+def _clear_throttle_cache():
+    from django.core.cache import cache
+
+    cache.clear()
+    yield
+    cache.clear()
+
+
 @pytest.fixture
 def centre(db):
     return Centre.objects.create(

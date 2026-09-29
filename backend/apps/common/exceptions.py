@@ -52,6 +52,12 @@ def exception_handler(exc, context):
         detail = exc.detail
         fields = detail if isinstance(detail, dict) else {"non_field_errors": detail}
         response.data = {"code": "invalid", "message": _first_message(detail), "data": {"fields": fields}}
+    elif isinstance(exc, drf_exceptions.Throttled):
+        response.data = {
+            "code": "throttled",
+            "message": "Too many attempts — try again in a minute.",
+            "data": {"retry_after": int(exc.wait or 60)},
+        }
     elif isinstance(exc, drf_exceptions.APIException):
         codes = exc.get_codes()
         code = codes if isinstance(codes, str) else exc.default_code

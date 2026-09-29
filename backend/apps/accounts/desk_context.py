@@ -48,6 +48,8 @@ class AsCounsellorMixin:
         user = request.user
         raw = request.query_params.get(AS_COUNSELLOR_PARAM)
         if user.role == Role.COUNSELLOR:
+            if user.counsellor is None:
+                raise PermissionDenied(ROLE_NOT_ALLOWED_MESSAGE, code=ROLE_NOT_ALLOWED_CODE)
             if raw is not None:
                 raise AsCounsellorForbidden()
             self.desk_counsellor, self.on_behalf_of, self.acting_as_lead = user.counsellor, None, False

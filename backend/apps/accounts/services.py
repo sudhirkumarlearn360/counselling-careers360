@@ -5,7 +5,7 @@ from __future__ import annotations
 from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import update_last_login
-from django.db import transaction
+from django.db import IntegrityError, OperationalError, transaction
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -41,7 +41,20 @@ def failure_data(failed_count: int) -> dict:
     }
 
 
+MAX_EMAIL_LENGTH = 254  # LoginAttempt.email max_length; longer input can never match an account
+RECORD_ATTEMPTS = 2  # one retry when two failures for the same email race on get_or_create
+
+
 def _record_failure(email: str) -> int:
+    for attempt in range(RECORD_ATTEMPTS):
+        try:
+            return _bump_failure(email)
+        except (OperationalError, IntegrityError):
+            if attempt == RECORD_ATTEMPTS - 1:
+                raise
+
+
+def _bump_failure(email: str) -> int:
     with transaction.atomic():
         attempt, _ = LoginAttempt.objects.select_for_update().get_or_create(email=email)
         attempt.failed_count += 1
@@ -56,6 +69,11 @@ def sign_in(raw_email, raw_password) -> tuple:
     password = raw_password if isinstance(raw_password, str) else ""
     if not email or not password.strip():
         raise CredentialsRequired()
+
+    if len(email) > MAX_EMAIL_LENGTH:
+        # Same hashing work and same response, but nothing is stored (bounds LoginAttempt growth).
+        check_password(password, _DUMMY_HASH)
+        raise InvalidCredentials(data=failure_data(0))
 
     user = StaffUser.objects.filter(email=email).first()
     password_ok = check_password(password, user.password if user else _DUMMY_HASH)

@@ -1,4 +1,5 @@
 import pytest
+from django.db import IntegrityError
 from rest_framework.test import APIClient
 
 from apps.accounts.models import LoginAttempt
@@ -61,6 +62,52 @@ def test_cq1_inactive_user_cannot_sign_in(users):
     assert login("desk@careers360.com", "desk123").json()["message"] == WRONG
 
 
+def test_cq2_inactive_user_response_identical_to_wrong_password(users):
+    users["reception"].is_active = False
+    users["reception"].save()
+    inactive = login("desk@careers360.com", "desk123")
+    wrong = login("meera@careers360.com", "nope")
+    assert inactive.status_code == wrong.status_code == 400
+    assert inactive.json() == wrong.json()
+
+
+def test_cq2_overlong_email_is_invalid_credentials_and_not_recorded(users):
+    resp = login("a" * 250 + "@x.com", "nope")
+    assert resp.status_code == 400
+    assert resp.json()["code"] == "invalid_credentials" and resp.json()["message"] == WRONG
+    assert not LoginAttempt.objects.exists()
+
+
+def test_cq2_failure_record_retries_once_on_db_error(users, monkeypatch):
+    import apps.accounts.services as svc
+
+    real, calls = svc._bump_failure, []
+
+    def flaky(email):
+        calls.append(1)
+        if len(calls) == 1:
+            raise IntegrityError("race")
+        return real(email)
+
+    monkeypatch.setattr(svc, "_bump_failure", flaky)
+    body = login("meera@careers360.com", "nope").json()
+    assert len(calls) == 2 and body["data"]["failed_attempts"] == 1
+
+
+def test_cq2_login_is_rate_limited_per_ip_with_standard_envelope(users, settings):
+    settings.REST_FRAMEWORK = {
+        **settings.REST_FRAMEWORK,
+        "DEFAULT_THROTTLE_RATES": {**settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"], "login": "3/min"},
+    }
+    statuses = [login("meera@careers360.com", "nope").status_code for _ in range(4)]
+    assert statuses == [400, 400, 400, 429]
+    body = login("meera@careers360.com", "desk123")
+    assert body.status_code == 429
+    assert body.json()["code"] == "throttled"
+    assert body.json()["message"] == "Too many attempts — try again in a minute."
+    assert isinstance(body.json()["data"]["retry_after"], int)
+
+
 def test_cq2_wrong_password_and_unknown_email_give_identical_response(users):
     a = login("meera@careers360.com", "nope")
     b = login("ghost@careers360.com", "nope")
@@ -92,7 +139,11 @@ def test_cq2_helpdesk_notice_text_and_no_reset_link(users):
     for _ in range(3):
         body = login("meera@careers360.com", "nope").json()
     assert body["data"]["helpdesk_notice"] == HELPDESK
-    assert "reset" not in str(body).lower()
+    # No reset flow in this release: the failure body carries only these keys, none a reset link/token.
+    assert set(body["data"]) == {"failed_attempts", "show_helpdesk", "helpdesk_notice"}
+    assert set(body) == {"code", "message", "data"}
+    assert APIClient().post("/api/1/auth/reset-password", {}, format="json").status_code == 404
+    assert APIClient().post("/api/1/auth/password-reset", {}, format="json").status_code == 404
 
 
 def test_cq2_first_failures_have_no_helpdesk_notice(users):
