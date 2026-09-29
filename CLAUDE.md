@@ -22,6 +22,30 @@ Validate the kit: `python3 scripts/check_kit.py`.
 - Every acceptance criterion gets a test (`test_cq<id>_*` / `it("CQ-<id> …")`). Run prd-story-verifier before calling an epic done.
 - Copy is verbatim from counselqueue-ui-spec. Status changes only through queue services.
 
+## Model routing
+Use the cheapest model that can do the job well, and **always pass `model` explicitly when dispatching a subagent** (superpowers Model Selection).
+
+| Level | Setting | Effect |
+|---|---|---|
+| Session | `.claude/settings.json` → `"model": "opusplan"` | Opus in plan mode (brainstorming, writing-plans, design); Sonnet when executing |
+| Subagent fallback | `CLAUDE_CODE_SUBAGENT_MODEL=sonnet` | Any dispatch without an explicit or agent model runs on Sonnet, not the session model |
+| Agent | `model:` in `.claude/agents/*.md` | django-backend-dev, react-frontend-dev → sonnet · prd-story-verifier → opus |
+| Dispatch | `model` param on the Agent call | Overrides everything above; use it per the table below |
+
+Precedence: Agent-call `model` > agent `model:` > `CLAUDE_CODE_SUBAGENT_MODEL` > session model.
+
+| Task | Model |
+|---|---|
+| Brainstorming, writing plans, architecture, open-question calls | opus (session in plan mode) |
+| Plan task marked `Model: haiku`: 1–2 files, complete spec (copy constants, a serializer, a simple component) | haiku |
+| Default implementation task: multi-file, a service + its tests, a screen + its hooks | sonnet |
+| Queue-engine / locking / consent / OTP-security tasks, fix-loop rounds 4–5 | opus |
+| Explore / codebase search | haiku |
+| Per-task review (SDD task reviewer) | sonnet; opus when the task touches locking, state transitions or auth |
+| Final whole-branch review, prd-story-verifier | opus |
+
+**Plans carry the choice:** every task in a `docs/superpowers/plans/*` plan has a `**Model:** haiku|sonnet|opus` line under its title, picked with this table. The subagent-driven-development controller dispatches that task's implementer with that model.
+
 ## Build roadmap (one plan each, in order)
 1. Foundations: scaffold backend + frontend, settings, MySQL, auth, seed_demo, CI commands.
 2. E1 Access & roles: CQ-1…5.

@@ -65,6 +65,7 @@ REVIEW = [
     ("counselqueue-domain/SKILL.md", "inside `token_confirm_desk`"),    # 16
     ("django-backend-conventions/SKILL.md", "delegates to `queue.services.close_centre`"),  # 19
 ]
+AGENT_MODELS = {"haiku", "sonnet", "opus"}
 VERIFIER_TOOLS = {"Read", "Grep", "Glob", "Bash"}
 TEMPLATES = [
     "token_confirm_self", "token_confirm_desk", "otp_code", "turn_called",
@@ -112,6 +113,8 @@ def check_agents(errs):
         fm = frontmatter(read(p))
         if fm.get("name") != a or not fm.get("description") or not fm.get("tools"):
             errs.append(f"bad frontmatter in {p.relative_to(ROOT)}")
+        if fm.get("model") not in AGENT_MODELS:
+            errs.append(f"{a} needs model: one of {sorted(AGENT_MODELS)}")
     tools = {x.strip() for x in frontmatter(read(AG / "prd-story-verifier.md")).get("tools", "").split(",") if x.strip()}
     if tools - VERIFIER_TOOLS:
         errs.append(f"prd-story-verifier must be read-only; disallowed tools: {sorted(tools - VERIFIER_TOOLS)}")
@@ -164,6 +167,11 @@ def check_claude(errs):
     for name in SKILLS + AGENTS:
         if name not in text:
             errs.append(f"CLAUDE.md does not mention {name}")
+    if "## Model routing" not in text:
+        errs.append("CLAUDE.md missing '## Model routing' section")
+    settings = read(ROOT / ".claude" / "settings.json")
+    if '"opusplan"' not in settings or "CLAUDE_CODE_SUBAGENT_MODEL" not in settings:
+        errs.append(".claude/settings.json must set model opusplan and CLAUDE_CODE_SUBAGENT_MODEL")
 
 
 CHECKS = {"skills": check_skills, "agents": check_agents, "stories": check_stories,

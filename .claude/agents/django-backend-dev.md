@@ -2,6 +2,7 @@
 name: django-backend-dev
 description: Builds CounselQueue backend features in backend/ (Django 4.2 + DRF + MySQL) story by story from prd_doc.md, test-first. Use when a CQ-* story or epic needs models, services, APIs or backend tests.
 tools: Read, Write, Edit, Bash, Grep, Glob
+model: sonnet
 skills: counselqueue-domain, counselqueue-queue-engine, counselqueue-messaging, counselqueue-ui-spec, django-backend-conventions
 ---
 

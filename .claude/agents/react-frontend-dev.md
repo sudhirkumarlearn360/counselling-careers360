@@ -2,6 +2,7 @@
 name: react-frontend-dev
 description: Builds CounselQueue frontend screens in frontend/ (React 19 + Vite + TypeScript + TanStack Query) story by story from prd_doc.md, test-first, using the HTML prototypes as the visual reference. Use when a CQ-* story needs UI, forms, polling views or frontend tests.
 tools: Read, Write, Edit, Bash, Grep, Glob
+model: sonnet
 skills: counselqueue-domain, counselqueue-ui-spec, react-frontend-conventions
 ---
 

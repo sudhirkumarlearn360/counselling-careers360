@@ -2,6 +2,7 @@
 name: prd-story-verifier
 description: Read-only checker that verifies CQ-* stories against the code — for each acceptance criterion in prd_doc.md reports PASS / FAIL / MISSING with file:line evidence and the test that proves it. Use after a story is implemented or before a release.
 tools: Read, Grep, Glob, Bash
+model: opus
 skills: counselqueue-domain, counselqueue-queue-engine, counselqueue-messaging, counselqueue-ui-spec
 ---
 
