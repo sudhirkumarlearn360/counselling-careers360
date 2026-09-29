@@ -18,12 +18,14 @@ CounselQueue runs Careers360's travelling counselling drives. Operations sets up
 ## Entities (fields → Django names)
 - `Centre`: city*, venue*, date, opens_at, closes_at (> opens_at), expected_students, status `planned|live|closed`, slug (for the QR URL), front_desk_phone. New centres are `planned`.
 - `CentreSettings` (1:1 Centre): target_session_min=15, wait_sla_min=30, recall_limit=2, whatsapp_enabled=True.
-- `Counsellor`: name*, mobile*, centre FK, desk_label*, streams (≥1, subset of STREAMS), duty `on_desk|on_break|off_duty` (new = `off_duty`), expected_session_min (default 15). Unique (centre, desk_label).
-- `StaffUser` (custom user, email login, case-insensitive): name, email, role `ops_lead|reception|counsellor`, centre FK (reception), counsellor 1:1 (counsellor), title.
-- `Student` (one row per token): token, centre FK, counsellor FK, source `self|desk`, status, name*, school*, mobile* (10 digits), parent_mobile, email, stream, klass, course*, exams[], clarity, help[] (≥1), consent `given|pending`, consent_at, consent_by (null = student themself), checkin_at, queue_at (ordering key; reset on rejoin/miss), priority (pull-forward), called_at, started_at, ended_at, recalls, rating (1–5, set once), outcome, follow_up_on, colleges_discussed, home_city, target_exam, budget, accompanied_by, access_key (signed, for the student token URL).
-- `TokenSequence`: (centre, last_number). The number never goes backwards.
+- `Counsellor`: name*, mobile*, streams (≥1, subset of STREAMS), expected_session_min (default 15). A person; posted to centres through `Posting`.
+- `Posting` (the roster, CQ-9/11/50): counsellor FK, centre FK, desk_label*, duty `on_desk|on_break|off_duty` (new = `off_duty`). Unique (centre, desk_label) and (counsellor, centre). A second posting on the same date as another is allowed with a conflict warning naming the other city (CQ-11). A counsellor's "current posting" = their posting at today's live centre. Sign-in lands them there (CQ-1). Duty, desk, board panels, tabs and assignment all read postings.
+- `StaffUser` (custom user, email login, case-insensitive): name, email, role `ops_lead|reception|counsellor`, centre FK (reception), counsellor 1:1 (counsellor), title. A counsellor's centre and desk come from their current `Posting`.
+- `Student` (one row per token): token, centre FK, counsellor FK, source `self|desk`, status, name*, school*, mobile* (10 digits), parent_mobile, email, stream, klass, course*, exams[], clarity, help[] (≥1), consent `given|pending`, consent_at, consent_by (null = student themself), checkin_at, queue_at (ordering key; reset on rejoin/miss), priority (pull-forward), called_at, started_at, ended_at (the current/latest visit), recalls, rating (1–5, set once), outcome, follow_up_on, colleges_discussed, home_city, target_exam, budget, accompanied_by, access_key (signed, for the student token URL).
+- `SessionRecord`: student FK, counsellor FK, called_at, started_at, ended_at, outcome. One row is written on each `complete_session`, so a requeued `done` student keeps their earlier session. Session-length metrics, averages and exports read `SessionRecord` (CQ-21/38/60/61).
+- `TokenSequence`: (centre, last_number). Created together with the Centre. The number never goes backwards.
 - `Note`: student FK, text (non-empty), author_name, author counsellor FK, created_at. No delete.
-- `AuditEvent`: student FK, verb (`checked_in|called|started|completed|missed|no_show|released|requeued|moved|pulled_forward|consent_given|edited|message_failed`), actor (StaffUser or null = student), `on_behalf_of` (Counsellor, set when an ops lead works a desk, CQ-5), at, data JSON.
+- `AuditEvent`: student FK (nullable for centre-level events), centre FK, verb (`checked_in|called|started|completed|missed|no_show|released|requeued|moved|pulled_forward|consent_given|edited|noted|rated|message_failed|centre_live|centre_closed|exported`), actor (StaffUser or null = student), `on_behalf_of` (Counsellor, set when an ops lead works a desk, CQ-5), at, data JSON.
 - `Message`: student FK, template, to, body, status `queued|sent|delivered|failed`, provider_id, created_at.
 
 ## Enums (exact)
@@ -51,7 +53,7 @@ CounselQueue runs Careers360's travelling counselling drives. Operations sets up
 "Open" statuses = waiting, called, in_session.
 
 ## Consent
-Self check-in: consent is given at submit (`consent_at`, by student). Desk check-in: `pending`, and `consent_request` is sent. It clears by the student replying YES / tapping the link (CQ-24), or by the counsellor recording verbal consent (`consent_by` = counsellor, CQ-42). A session cannot start while pending.
+Self check-in: consent is given at submit (`consent_at`, by student). Desk check-in: `pending`. The consent ask is sent inside `token_confirm_desk`. `consent_request` is only for a resend from the session screen, so the student gets one message, not two. It clears by the student replying YES / tapping the link (CQ-24), or by the counsellor recording verbal consent (`consent_by` = counsellor, CQ-42; when an ops lead records it on a desk, `consent_by` = that desk's counsellor and `on_behalf_of` is set). A session cannot start while pending.
 
 ## Roles & navigation (CQ-3)
 | Role | Nav (in order) | Default screen |

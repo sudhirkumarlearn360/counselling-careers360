@@ -15,8 +15,8 @@ backend/
   config/settings/{base,local,test}.py  config/urls.py
   apps/
     accounts/    StaffUser (AbstractBaseUser, USERNAME_FIELD=email), login lockout counter, permissions.py (IsOpsLead, IsReception, IsCounsellor, RoleIn(...))
-    centres/     Centre, CentreSettings, services (create/edit/go_live/close, coverage, duplicate warn)
-    counsellors/ Counsellor, services (create, set_duty, roster conflicts)
+    centres/     Centre (creates its TokenSequence), CentreSettings, services (create/edit/go_live, coverage, duplicate warn); close delegates to `queue.services.close_centre`
+    counsellors/ Counsellor, Posting (roster: counsellor×centre, desk_label, duty), services (create, post, set_duty, roster conflicts)
     queue/       Student, TokenSequence, Note, AuditEvent; services/{assignment,tokens,checkin,eta,transitions,consent}.py; selectors.py (read queries)
     messaging/   Message, OtpCode, providers/{base,stub}.py, services.py, templates.py
     insights/    selectors.py (aggregations), export.py (CSV)
@@ -47,12 +47,18 @@ backend/
 | `GET public/tokens/{access_key}/` · `POST …/release/` · `POST …/consent/` · `POST …/rating/` | public | 21–28, 24 |
 | `GET public/board/{slug}/` | public | 51–53 |
 | `GET/POST centres/`, `PATCH centres/{id}/`, `POST centres/{id}/go-live/`, `POST centres/{id}/close/` | ops | 6–8, 10 |
-| `GET/POST counsellors/`, `PATCH counsellors/{id}/`, `POST counsellors/{id}/duty/` | ops / self | 9, 11, 37 |
+| `GET/POST counsellors/`, `PATCH counsellors/{id}/` | ops | 9 |
+| `GET/POST counsellors/{id}/postings/`, `PATCH postings/{id}/` (response carries roster-conflict warnings) | ops | 9, 11 |
+| `POST postings/{id}/duty/` | counsellor (own posting), ops | 37 |
 | `GET centres/{id}/hall/?q=&counsellor=` | reception, ops | 31–34, 58 |
 | `POST centres/{id}/checkins/` | reception | 29, 30 |
 | `GET desk/queue/` · `POST desk/call-next/` · `POST desk/call-token/` | counsellor (ops as_counsellor) | 38–41 |
-| `POST students/{id}/{start,complete,missed,move,requeue,pull-forward,consent}/` | per role | 35, 36, 41, 42, 46, 49 |
-| `PATCH students/{id}/` · `POST students/{id}/notes/` · `POST students/{id}/messages/{mid}/resend/` | counsellor/ops | 44, 45, 48, 58 |
+| `GET students/{id}/` (record + audit trail + messages) | reception (own centre), counsellor (own), ops | 30, 36, 58 |
+| `POST students/{id}/{start,complete,missed,pull-forward,consent}/` | counsellor (own desk), ops (as_counsellor) | 41, 42, 46, 49 |
+| `POST students/{id}/move/`, `POST students/{id}/requeue/` | reception (own centre), ops | 35, 36 |
+| `PATCH students/{id}/` · `POST students/{id}/notes/` | counsellor (own), ops (as_counsellor) | 44, 45, 48 |
+| `POST students/{id}/messages/{mid}/resend/` | reception (own centre), counsellor (own), ops | 58 |
+| `POST messaging/status/` (provider webhook, signed) | provider | 58 |
 | `GET students/?filters` · `GET students/export.csv` | ops (counsellor: own) | 50, 59, 60 |
 | `GET insights/?centre=` | ops | 61 |
 | `GET live/` | ops | 5 |

@@ -43,11 +43,12 @@ Screens: [screens](references/screens.md). Colours and fonts: [design-tokens](re
 - OTP: "That code doesn't match — check your WhatsApp"
 - Duplicate: "A token is already open for this number — {token}."
 - No one on duty: "No counsellor is on desk yet — please see the front desk."
+- No one for the stream: "No counsellor for your stream is on desk yet — please see the front desk."
 - Avg wait before any call: "—"
 - What to bring: "Marksheets, entrance scorecard, photo ID, and a parent or guardian — all optional."
 
 **Token screen (CQ-21…28)**
-- Position: "{n} ahead of you at {desk}" · "About {m} min" · "Expected around {HH:MM}" (always "about"/approximate).
+- Position (only when `eta.ahead ≥ 1`; when `eta.is_next` show the Next line instead): "{n} ahead of you at {desk}" · "About {m} min" · "Expected around {HH:MM}" (always "about"/approximate).
 - Next: "You're next — stay near {desk}."
 - Called: "It's your turn — go to {desk}, {counsellor}. Your place is held for two calls."
 - In session: "Session in progress with {counsellor} at {desk}."
