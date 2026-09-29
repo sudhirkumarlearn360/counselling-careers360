@@ -64,3 +64,36 @@ Rules (summary):
 | POST | `webhooks/messaging/status` | cq.webhooks.messaging-status | provider (signed) | 58 |
 
 † An ops_lead passes `?as_counsellor=<counsellor_id>` (CQ-5). This sets `on_behalf_of` and is rejected (403) for counsellors.
+
+## Request / response reference (what the frontend sends and reads)
+
+All bodies are JSON. Success: `{"data": ...}` (+ `"warnings": [{code,message}]`, `"message"`, and for lists
+`"count"` and `"total"`). Error: `{"code","message","data"}` with the exact UI string in `message`. Validation
+errors (`code: "invalid"`) carry `data.fields = {field: message}` for **every** failing field.
+
+### public (no login)
+| Route | Body → data |
+|---|---|
+| `GET public/centres/<slug>` | → `centre{id,city,venue,date,opens_at,closes_at,status,front_desk_phone}`, `open`, `message`, `stats{waiting,counsellors_on_site,avg_wait_min\|null,avg_wait_label}`, `steps[]`, `bring[]`, `bring_note` |
+| `POST …/otp/send` | `{mobile}` → `{resend_after_sec, expires_in_min}`; 429 `otp_resend_wait` `{retry_after}` |
+| `POST …/otp/verify` | `{mobile, code}` → `{verification_id}`; 400 `otp_mismatch` (`data.attempts_left`) / `otp_expired` |
+| `POST …/check-in` | `{name,school,mobile,parent_mobile,email,stream,klass,course,exams[],clarity,help[],consent:true,verification_id}` → 201 `{access_key, token{…}}`; 409 `duplicate_token` (`data.access_key`, `data.token`); 400 `verification_required` |
+| `GET public/tokens/<key>` | → `token,status,state{kind: waiting\|next\|called\|in_session\|done\|no_show\|released\|not_counselled, ahead?,minutes?,expected_at?,approximate?},stream_name,name,mobile,counsellor,desk,venue,city,date,closes_at,front_desk_phone,checked_in_at,consent,rating,can_release,can_rate` |
+| `POST …/release` `…/consent` | → token payload |
+| `POST …/rating` | `{rating:1-5}` → token payload; 409 `already_rated` |
+| `GET public/board/<slug>` | → `centre, now, total_waiting, panels[{desk,counsellor,duty,serving\|null,next\|null,waiting,line}], recently_called[], recently_called_empty, standing_line` |
+
+### hall (reception own centre; ops any)
+`GET hall/centres/<id>/queue?q=&counsellor=` → `header{waiting,late,wait_promise_min}`, `tabs[{key,label,counsellor_id,count,late,duty?}]`,
+`rows[{id,token,name,mobile,stream,status,source,counsellor{id,name,desk},checked_in_at,waited_min,late,consent_pending,recalls,alert_failed,alert_failed_message}]`, `query`, `count`.
+`POST hall/centres/<id>/check-in` `{name,mobile,stream,help[],…optional…,counsellor_id?,confirm?}` → 201 `data`=student, `message` "Token … issued to …".
+`GET hall/students/<id>` → student + `audit[]` + `messages[]`. `POST …/move` `{counsellor_id,confirm?}`; `POST …/requeue`; `POST …/messages/<id>/resend`.
+
+### desk (counsellor; ops with `?as_counsellor=<id>`)
+`GET desk/queue` → `centre|null, message?, desk, duty, counsellor, figures{in_queue,waiting_hall,counselled_today,avg_session_min|null,target_session_min,late,wait_promise_min}, next_token, current{student + timer}, queue[{id,token,name,stream,klass,waited_min,source,consent_pending,late,next}]`.
+Actions return the refreshed desk payload (+ `called`, `warnings`, `message`, `next_token_after`): `POST desk/call-next`, `desk/call-token {token}`, `desk/students/<id>/{start,complete,missed,pull-forward,consent}`.
+`GET|PATCH desk/students/<id>` (PATCH: name,school,mobile,parent_mobile,email,stream,klass,course,clarity,home_city,target_exam,budget,colleges_discussed,accompanied_by,outcome,follow_up_on).
+`POST …/notes {text}`, `…/consent-request`, `…/messages/<id>/resend`. `GET desk/my-students`, `desk/my-centres`. `POST desk/duty {duty}`.
+
+### ops
+`GET ops/students?q=&counsellor=&centre=&stream=&status=&limit=&offset=` → rows + `count` (matched) + `total`. `GET ops/students/export` (same filters) → `text/csv`. `GET ops/insights?centre=`.

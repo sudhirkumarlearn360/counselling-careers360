@@ -40,6 +40,16 @@ MATRIX = [
     row("PATCH", "/api/1/ops/postings/{posting_id}", 401, 200, 403, 403),
     # desk/duty: ops needs ?as_counsellor (400); the counsellor sends no duty (400); reception 403.
     row("POST", "/api/1/desk/duty", 401, 400, 403, 400),
+    # Task 5+: hall (reception + ops), desk (counsellor; ops needs ?as_counsellor), ops records.
+    row("GET", "/api/1/hall/centres/{centre_id}/queue", 401, 200, 200, 403),
+    row("POST", "/api/1/hall/centres/{centre_id}/check-in", 401, 400, 400, 403),
+    row("GET", "/api/1/desk/queue", 401, 400, 403, 200),
+    row("POST", "/api/1/desk/call-next", 401, 400, 403, 400),  # counsellor: empty queue
+    row("GET", "/api/1/desk/my-students", 401, 400, 403, 200),
+    row("GET", "/api/1/desk/my-centres", 401, 400, 403, 200),
+    row("GET", "/api/1/ops/students", 401, 200, 403, 403),
+    row("GET", "/api/1/ops/students/export", 401, 200, 403, 403),
+    row("GET", "/api/1/ops/insights", 401, 200, 403, 403),
 ]
 
 

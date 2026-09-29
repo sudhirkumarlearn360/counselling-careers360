@@ -12,7 +12,7 @@ from django.urls import resolve, reverse
 
 from apps.common.views import ApiVersionMixin
 
-PENDING_REASON = "endpoints land in Tasks 2–7"
+PENDING_REASON = "endpoint not built yet"
 
 # (url name, path under /api/1/, sample kwargs). Same order as API_ROUTES.md.
 ROUTES = [
@@ -74,22 +74,7 @@ ROUTES = [
 ]
 
 # Flip names on as their endpoints land (Tasks 2–7).
-IMPLEMENTED: set = {
-    "cq.auth.login",
-    "cq.auth.logout",
-    "cq.auth.refresh",
-    "cq.auth.me",
-    "cq.ops.live",
-    "cq.ops.centres",
-    "cq.ops.centre-detail",
-    "cq.ops.centre-go-live",
-    "cq.ops.centre-close",
-    "cq.ops.counsellors",
-    "cq.ops.counsellor-detail",
-    "cq.ops.counsellor-postings",
-    "cq.ops.posting-detail",
-    "cq.desk.duty",
-}
+IMPLEMENTED: set = {name for name, _, _ in ROUTES}  # every route in the contract is live
 
 
 def _expected_path(path, kwargs):

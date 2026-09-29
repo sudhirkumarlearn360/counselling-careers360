@@ -92,3 +92,15 @@ def send_template(student, key: str, **variables) -> Message:
     if message.status == Message.Status.FAILED:
         _record_failure(student, message)
     return message
+
+
+class ResendRefused(Exception):
+    """The message doesn't belong to this student, or has no student (an OTP)."""
+
+
+def resend_message(student, message_id: int) -> Message:
+    """Send the same template again (CQ-58). Never changes the student's status or queue position."""
+    original = Message.objects.filter(pk=message_id, student_id=student.pk).first()
+    if original is None:
+        raise ResendRefused()
+    return send_template(student, original.template)

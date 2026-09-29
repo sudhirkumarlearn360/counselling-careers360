@@ -11,6 +11,7 @@ from django.urls import path
 
 from apps.centres import views as centre_views
 from apps.counsellors import views as counsellor_views
+from apps.insights import views as insight_views
 from apps.ops import views
 
 urlpatterns = [
@@ -51,4 +52,11 @@ urlpatterns = [
         counsellor_views.PostingDetailView.as_view(),
         name="cq.ops.posting-detail",
     ),
+    path("api/<int:version>/ops/students", insight_views.OpsStudentsView.as_view(), name="cq.ops.students"),
+    path(
+        "api/<int:version>/ops/students/export",
+        insight_views.OpsStudentsExportView.as_view(),
+        name="cq.ops.students-export",
+    ),
+    path("api/<int:version>/ops/insights", insight_views.OpsInsightsView.as_view(), name="cq.ops.insights"),
 ]

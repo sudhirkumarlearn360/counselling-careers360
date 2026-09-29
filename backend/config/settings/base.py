@@ -115,7 +115,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "EXCEPTION_HANDLER": "apps.common.exceptions.exception_handler",
-    "DEFAULT_THROTTLE_RATES": {"login": "10/min", "logout": "30/min"},
+    "DEFAULT_THROTTLE_RATES": {"login": "10/min", "logout": "30/min", "checkin": "30/min", "otp": "20/min"},
 }
 
 SIMPLE_JWT = {
@@ -151,3 +151,6 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "loggers": {"apps": {"handlers": ["console"], "level": "INFO"}},
 }
+
+# Delivery-status webhook signature key (CQ-58). Empty = webhook disabled.
+MESSAGING_WEBHOOK_SECRET = os.getenv("MESSAGING_WEBHOOK_SECRET", "")
