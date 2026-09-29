@@ -15,7 +15,8 @@ export function AllStudents() {
   const params = Object.fromEntries(Object.entries(applied).filter(([, v]) => v));
   const { data, isLoading } = useOpsStudents(params);
   const counsellors = useCounsellors().data ?? [];
-  const centres = useCentres().data ?? [];
+  const centresData = useCentres().data;
+  const centres = useMemo(() => centresData ?? [], [centresData]);
   const toast = useToast();
 
   const cities = useMemo(() => [...new Set(centres.map((c) => c.city))].sort(), [centres]);
