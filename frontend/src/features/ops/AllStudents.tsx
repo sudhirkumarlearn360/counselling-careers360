@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
+import { fmtMobile, prettyDate } from "../../lib/format";
 import { download } from "../../api/client";
 import { useCentres, useCounsellors, useOpsStudents } from "../../api/hooks";
 import { StatusPill, errText, useToast } from "../../app/ui";
+import { StudentDetailsDialog } from "./StudentDetails";
 import { STATUS_LABELS, STREAMS, streamName } from "../../lib/format";
 import { phase } from "../../lib/phase";
 
@@ -18,6 +20,7 @@ export function AllStudents() {
   const centresData = useCentres().data;
   const centres = useMemo(() => centresData ?? [], [centresData]);
   const toast = useToast();
+  const [openId, setOpenId] = useState<number | null>(null);
 
   const cities = useMemo(() => [...new Set(centres.map((c) => c.city))].sort(), [centres]);
   // Venue options depend on the selected centre: only that centre's venues are offered.
@@ -52,59 +55,64 @@ export function AllStudents() {
 
   return (
     <>
-      <h1>All students</h1>
+      <div className="pagehead">
+        <div>
+          <h1>All students</h1>
+          <p className="lede">Every student who has ever walked into a counselling centre — searchable, filterable, exportable.</p>
+        </div>
+        <div className="right"><button className="btn" type="button" onClick={exportCsv}>Export CSV</button></div>
+      </div>
       <form
-        className="toolbar"
+        className="card"
         onSubmit={(e) => {
           e.preventDefault();
           setApplied(draft);
         }}
       >
-        <input className="input" type="search" aria-label="Search students" placeholder="Name, mobile or token" value={draft.q} onChange={(e) => set("q", e.target.value)} />
-        {sel("counsellor", "Counsellor", counsellors.map((c) => ({ v: String(c.id), l: c.name })))}
-        {sel("city", "Centre", cities.map((c) => ({ v: c, l: c })))}
-        {sel("venue", "Venue", venues.map((v) => ({ v, l: v })), !draft.city)}
-        {sel("stream", "Stream", STREAMS.map((s) => ({ v: s.code, l: s.name })))}
-        {status && sel("status", "Status", Object.entries(STATUS_LABELS).map(([v, l]) => ({ v, l })))}
-        <button className="btn sm primary" type="submit">Apply</button>
-        <button
-          className="btn sm"
-          type="button"
-          onClick={() => {
-            setDraft(EMPTY);
-            setApplied(EMPTY);
-          }}
-        >
-          Clear
-        </button>
-        <button className="btn sm" type="button" onClick={exportCsv}>Export CSV</button>
+        <div className="filters" style={{ marginBottom: 0 }}>
+          <input className="input" type="search" aria-label="Search students" placeholder="Name, number or token" value={draft.q} onChange={(e) => set("q", e.target.value)} />
+          {sel("counsellor", "Counsellor", counsellors.map((c) => ({ v: String(c.id), l: c.name })))}
+          {sel("city", "Centre", cities.map((c) => ({ v: c, l: c })))}
+          {sel("venue", "Venue", venues.map((v) => ({ v, l: v })), !draft.city)}
+          {sel("stream", "Stream", STREAMS.map((s) => ({ v: s.code, l: s.name })))}
+          {status && sel("status", "Status", Object.entries(STATUS_LABELS).map(([v, l]) => ({ v, l })))}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn primary" type="submit" style={{ flex: 1 }}>Apply</button>
+            <button className="btn" type="button" style={{ flex: 1 }} onClick={() => { setDraft(EMPTY); setApplied(EMPTY); }}>Clear</button>
+          </div>
+        </div>
       </form>
-      {data && <p role="status">{data.count} of {data.total} students</p>}
+      {data && <p role="status" className="muted">{data.count} of {data.total} students</p>}
       {isLoading && <p role="status">Loading…</p>}
-      {data && data.rows.length === 0 && <div className="card"><p>No students match these filters.</p></div>}
+      {data && data.rows.length === 0 && <div className="card empty"><p style={{ margin: 0 }}>No students match these filters.</p></div>}
       {data && data.rows.length > 0 && (
-        <div className="card table-wrap">
+        <div className="table-wrap">
           <table className="t">
             <thead>
               <tr>
-                <th>Token</th><th>Name</th><th>Mobile</th><th>School</th><th>Stream</th><th>Course</th><th>Centre</th><th>Date</th><th>Counsellor</th>
+                <th>Token</th><th>Student</th><th>Stream</th><th>Centre</th><th>Counsellor</th>
                 {timing && <><th>Wait</th><th>Session</th></>}
-                <th>Outcome</th>{status && <th>Status</th>}
+                <th>Outcome</th>{status && <th>Status</th>}<th />
               </tr>
             </thead>
             <tbody>
               {data.rows.map((r) => (
                 <tr key={r.id}>
-                  <td><b>{r.token}</b></td><td>{r.name}</td><td>{r.mobile}</td><td>{r.school || "—"}</td><td>{streamName(r.stream)}</td>
-                  <td>{r.course || "—"}</td><td>{r.centre.city}</td><td>{r.date}</td><td>{r.counsellor}</td>
+                  <td><span className="tok">{r.token}</span></td>
+                  <td><b style={{ fontWeight: 500 }}>{r.name}</b><span className="cell-sub">{fmtMobile(r.mobile)}{r.school ? ` · ${r.school}` : ""}</span></td>
+                  <td>{streamName(r.stream)}{r.course && <span className="cell-sub">{r.course}</span>}</td>
+                  <td>{r.centre.city}<span className="cell-sub">{prettyDate(r.date)}</span></td>
+                  <td>{r.counsellor}</td>
                   {timing && <><td>{r.wait_min == null ? "—" : `${r.wait_min} min`}</td><td>{r.session_min == null ? "—" : `${r.session_min} min`}</td></>}
-                  <td>{r.outcome ?? "Not set"}</td>{status && <td><StatusPill status={r.status} /></td>}
+                  <td>{r.outcome ?? "—"}</td>{status && <td><StatusPill status={r.status} /></td>}
+                  <td><button className="btn sm" onClick={() => setOpenId(r.id)}>Open</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+      {openId != null && <StudentDetailsDialog path={`hall/students/${openId}`} onClose={() => setOpenId(null)} />}
     </>
   );
 }

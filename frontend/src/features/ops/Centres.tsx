@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api, ApiError } from "../../api/client";
 import { useCentres } from "../../api/hooks";
 import type { CentreFull } from "../../api/types";
@@ -50,35 +51,46 @@ export function Centres() {
 
   return (
     <>
-      <h1>Centres &amp; dates</h1>
-      <div className="toolbar"><button className="btn primary" onClick={() => { setError(""); setEditing({ draft: blank() }); }}>New centre</button></div>
+      <div className="pagehead">
+        <div>
+          <h1>Centres &amp; dates</h1>
+          <p className="lede">Every city drive, the venue, and who is counselling there.</p>
+        </div>
+        <div className="right"><button className="btn primary" onClick={() => { setError(""); setEditing({ draft: blank() }); }}>Add a centre</button></div>
+      </div>
       {isLoading && <p role="status">Loading…</p>}
-      <div className="grid">
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 22rem), 1fr))" }}>
         {data?.map((c) => (
-          <article key={c.id} className="card">
-            <h2 style={{ marginTop: 0 }}>{c.city} <span className={`pill ${c.status === "live" ? "ok" : c.status === "closed" ? "bad" : ""}`}>{c.status}</span></h2>
-            <p className="muted">{c.venue} · {prettyDate(c.date)} · {c.opens_at}–{c.closes_at}</p>
-            <p>{c.counsellor_count} counsellors · {c.expected_students} expected</p>
-            <p className="muted" style={{ margin: "0.25rem 0" }}>Front desk login: {c.front_desk_email || "—"}</p>
-            <p style={{ margin: "0.25rem 0" }}>
-              Covers: {c.covered_streams.map(streamName).join(", ") || "—"}
-            </p>
+          <article key={c.id} className="card" style={{ marginBottom: 0 }}>
+            <div className="centrehead">
+              <div>
+                <h2>{c.city}</h2>
+                <div className="muted" style={{ fontSize: 13.5 }}>{prettyDate(c.date)} · {c.opens_at}–{c.closes_at}</div>
+                <div className="muted" style={{ fontSize: 13.5 }}>{c.venue}</div>
+              </div>
+              <span className={`pill ${c.status === "live" ? "ok" : c.status === "closed" ? "grey" : "warn"}`}>{c.status === "live" ? "Live" : c.status === "closed" ? "Closed" : "Planned"}</span>
+            </div>
+            <div className="kvrow"><span>Counsellors</span><b>{c.counsellor_names.length ? c.counsellor_names.join(", ") : "None assigned"}</b></div>
+            <div className="kvrow"><span>Streams covered</span><b>{c.covered_streams.map(streamName).join(", ") || "—"}</b></div>
             {c.uncovered_streams.length > 0 && c.status !== "closed" && (
-              <p className="notice" style={{ margin: "0.25rem 0" }}>Uncovered: {c.uncovered_streams.map(streamName).join(", ")}</p>
+              <div className="kvrow"><span>Uncovered</span><b style={{ color: "var(--amber)" }}>{c.uncovered_streams.map(streamName).join(", ")}</b></div>
             )}
-            <div className="toolbar" style={{ marginTop: "0.75rem" }}>
+            <div className="kvrow"><span>Students</span><b>{c.student_count} / {c.expected_students} planned</b></div>
+            <div className="kvrow"><span>Front desk login</span><b>{c.front_desk_email || "—"}</b></div>
+            <div className="toolbar" style={{ marginTop: 12, marginBottom: 0 }}>
+              {c.status !== "closed" && <Link className="btn sm" to="/console/counsellors">Assign counsellor</Link>}
+              {c.status === "live" && <button className="btn sm" onClick={() => decide(c, "close", false)}>Close the day</button>}
+              {c.status === "planned" && <button className="btn sm" onClick={() => decide(c, "go-live", false)}>Set live</button>}
               {c.status !== "closed" && (
                 <button className="btn sm" onClick={() => { setError(""); setEditing({ id: c.id, draft: { city: c.city, venue: c.venue, date: c.date, opens_at: c.opens_at, closes_at: c.closes_at, expected_students: String(c.expected_students), front_desk_phone: c.front_desk_phone ?? "", email: c.front_desk_email ?? "", password: "" } }); }}>Edit</button>
               )}
-              {c.status === "planned" && <button className="btn sm primary" onClick={() => decide(c, "go-live", false)}>Set live</button>}
-              {c.status === "live" && <button className="btn sm danger" onClick={() => decide(c, "close", false)}>Close centre</button>}
             </div>
           </article>
         ))}
       </div>
 
       {editing && (
-        <Dialog title={editing.id ? "Edit centre" : "New centre"} onClose={() => setEditing(null)}>
+        <Dialog title={editing.id ? "Edit centre" : "Add a centre"} onClose={() => setEditing(null)}>
           {error && <div className="notice bad" role="alert" style={{ marginBottom: "0.75rem" }}>{error}</div>}
           {(["city", "venue"] as const).map((k) => (
             <Field key={k} label={k === "city" ? "City" : "Venue"} htmlFor={`c-${k}`}>

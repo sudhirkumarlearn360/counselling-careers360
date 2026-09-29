@@ -73,8 +73,7 @@ describe("CQ-31…34 front desk hall queue", () => {
       }),
     );
     renderAt("/console/hall");
-    await userEvent.click((await screen.findAllByRole("button", { name: "Move" }))[0]);
-    await userEvent.click(await screen.findByRole("button", { name: /Rahul Sen · Desk 2 — 0 in queue/ }));
+    await userEvent.selectOptions(await screen.findByLabelText("Move PCM-01 to"), "4");
     expect(await screen.findByText("Rahul Sen doesn't cover Science – PCM. Move anyway?")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Move anyway" }));
     await waitFor(() => expect(moves).toEqual([{ counsellor_id: 4, confirm: false }, { counsellor_id: 4, confirm: true }]));
@@ -85,7 +84,7 @@ describe("CQ-31…34 front desk hall queue", () => {
     renderAt("/console/add");
     await userEvent.type(await screen.findByLabelText("Student name"), "Walk In");
     await userEvent.type(screen.getByLabelText("Mobile"), "9811022001");
-    await userEvent.click(screen.getByRole("button", { name: "College selection" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "College selection" }));
     await userEvent.click(screen.getByRole("button", { name: "Issue token" }));
     expect(await screen.findByText("A token is already open for this number — PCM-01.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Open the existing token/ })).toBeInTheDocument();
@@ -97,11 +96,11 @@ describe("CQ-31…34 front desk hall queue", () => {
     renderAt("/console/add");
     await userEvent.type(await screen.findByLabelText("Student name"), "Walk In");
     await userEvent.type(screen.getByLabelText("Mobile"), "9811022001");
-    await userEvent.click(screen.getByRole("button", { name: "College selection" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "College selection" }));
     await userEvent.click(screen.getByRole("button", { name: "Issue token" }));
     expect((await screen.findAllByText(/Token PCM-05 issued to Meera Iyer, Desk 1\./)).length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Student name")).toHaveValue("");
-    expect(screen.getByRole("button", { name: "College selection" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("checkbox", { name: "College selection" })).not.toBeChecked();
   });
 
   it("never asks for ops/live (it is ops-only)", async () => {
@@ -114,15 +113,18 @@ describe("CQ-31…34 front desk hall queue", () => {
 });
 
 describe("CQ-5 ops lead opens a desk", () => {
-  const live = [{ ...centre, counsellors: [{ posting_id: 9, counsellor_id: 3, name: "Meera Iyer", streams: ["PCM"], desk_label: "Desk 1", duty: "on_desk", serving: { token: "PCM-04", status: "called" }, queue_length: 12, avg_session_min: 14, counselled_today: 5 }] }];
+  const live = [{ ...centre, summary: { checked_in: 9, self_scan: 7, at_desk: 2, waiting: 6, late: 1, counselled: 1, no_shows: 1, planned: 120, capacity_pct: 8 }, counsellors: [{ posting_id: 9, counsellor_id: 3, name: "Meera Iyer", streams: ["PCM"], desk_label: "Desk 1", duty: "on_desk", serving: { token: "PCM-04", name: "Kavya", status: "called" }, queue_length: 12, queue_late: 3, avg_session_min: 14, counselled_today: 5 }] }];
   beforeEach(() => signInAs("ops_lead", { name: "Nikhil Bhatia" }));
 
   it("every counsellor card has an Open desk control", async () => {
     server.use(http.get(`${API}/ops/live`, () => ok(live)));
     renderAt("/console/live");
-    const link = await screen.findByRole("link", { name: "Open desk" });
+    const link = await screen.findByRole("link", { name: "Open this desk" });
     expect(link).toHaveAttribute("href", "/console/desk/3/queue");
-    expect(screen.getByText(/Queue:/)).toHaveTextContent("Queue: 12");
+    expect(screen.getByText("12 · 3 late")).toBeInTheDocument();
+    expect(screen.getByText("PCM-04 · Kavya")).toBeInTheDocument();
+    expect(screen.getByText("8%")).toBeInTheDocument(); // of day capacity
+    expect(screen.getByText("7 self-scan, 2 at desk")).toBeInTheDocument();
   });
 
   it("a persistent banner names the desk, says actions are recorded against them, and goes back", async () => {
@@ -171,10 +173,10 @@ describe("CQ-39…49 counsellor desk", () => {
   it("CQ-38/39: header figures, next student highlighted, one control naming the token to call", async () => {
     server.use(http.get(`${API}/desk/queue`, () => ok(desk(null))));
     renderAt("/console/queue");
-    expect(await screen.findByRole("button", { name: "Call PCM-08" })).toBeEnabled();
-    expect(screen.getByText("in my queue")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Call next · PCM-08" })).toBeEnabled();
+    expect(screen.getByText("In your queue")).toBeInTheDocument();
     expect(screen.getByText("Next")).toBeInTheDocument();
-    expect(screen.getAllByText("consent pending").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Consent pending").length).toBeGreaterThan(0);
     expect(screen.getByText(/Added at desk/)).toBeInTheDocument();
     expect(screen.getByText(/Hotel Landmark/)).toBeInTheDocument();
   });
@@ -182,7 +184,7 @@ describe("CQ-39…49 counsellor desk", () => {
   it("Phase 1 scope: no call-by-token, no pull forward, no 'what they said at check-in'", async () => {
     server.use(http.get(`${API}/desk/queue`, () => ok(desk(null))));
     renderAt("/console/queue");
-    await screen.findByRole("button", { name: "Call PCM-08" });
+    await screen.findByRole("button", { name: "Call next · PCM-08" });
     expect(screen.queryByLabelText("Call a token")).toBeNull();
     expect(screen.queryByRole("button", { name: "Pull forward" })).toBeNull();
   });
@@ -201,7 +203,7 @@ describe("CQ-39…49 counsellor desk", () => {
     server.use(http.get(`${API}/desk/queue`, () => ok(desk(student()))));
     renderAt("/console/queue");
     expect(await screen.findByText("Finish PCM-07 before calling the next student.")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Call PCM-08" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Call next · PCM-08" })).toBeDisabled();
   });
 
   it("CQ-37: switching duty sends the chosen state", async () => {
@@ -332,6 +334,7 @@ describe("Phase 2 code stays working when switched on", () => {
 describe("Add a Centre and All Students (agreed scope)", () => {
   const centreFull = (over: Record<string, unknown> = {}) => ({
     ...centre, id: 1, city: "Gwalior", venue: "Hotel Landmark", expected_students: 100, covered_streams: [], uncovered_streams: [], counsellor_count: 0,
+    counsellor_names: [], student_count: 0,
     front_desk_email: "gwalior.desk@careers360.com", ...over,
   });
   beforeEach(() => signInAs("ops_lead"));
@@ -348,9 +351,9 @@ describe("Add a Centre and All Students (agreed scope)", () => {
       }),
     );
     renderAt("/console/centres");
-    expect(await screen.findByText(/Front desk login: gwalior\.desk@careers360\.com/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "New centre" }));
-    const dlg = await screen.findByRole("dialog", { name: "New centre" });
+    expect(await screen.findByText("gwalior.desk@careers360.com")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Add a centre" }));
+    const dlg = await screen.findByRole("dialog", { name: "Add a centre" });
     await userEvent.type(within(dlg).getByLabelText("City"), "Indore");
     await userEvent.type(within(dlg).getByLabelText("Venue"), "Hotel Fortune");
     await userEvent.type(within(dlg).getByLabelText("Email"), "indore.desk@careers360.com");

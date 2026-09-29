@@ -4,7 +4,8 @@ import { api, ApiError } from "../../api/client";
 import { useHall } from "../../api/hooks";
 import type { HallRow } from "../../api/types";
 import { Dialog, StatusPill, errText, useToast } from "../../app/ui";
-import { streamName } from "../../lib/format";
+import { StudentDetailsDialog } from "../ops/StudentDetails";
+import { fmtMobile, streamName } from "../../lib/format";
 import { useHallCentre } from "./useHallCentre";
 
 const CAN_REQUEUE = ["no_show", "released", "done"];
@@ -17,6 +18,7 @@ export function HallQueue() {
   const qc = useQueryClient();
   const toast = useToast();
   const [moving, setMoving] = useState<HallRow | null>(null);
+  const [detailsId, setDetailsId] = useState<number | null>(null);
   const [confirm, setConfirm] = useState<{ message: string; counsellorId: number } | null>(null);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["hall"] });
@@ -28,7 +30,10 @@ export function HallQueue() {
       setConfirm(null);
       refresh();
     } catch (e) {
-      if (e instanceof ApiError && e.code === "needs_confirmation") setConfirm({ message: e.message, counsellorId });
+      if (e instanceof ApiError && e.code === "needs_confirmation") {
+        setMoving(row);
+        setConfirm({ message: e.message, counsellorId });
+      }
       else toast(errText(e), true);
     }
   }
@@ -96,7 +101,7 @@ export function HallQueue() {
                   <div className="body">
                     <div className="nm">{r.name}</div>
                     <div className="meta">
-                      {r.counsellor.name} · {r.counsellor.desk} · {streamName(r.stream)} · {r.mobile}
+                      {r.counsellor.name} · {r.counsellor.desk} · {streamName(r.stream)} · {fmtMobile(r.mobile)}
                       {r.waited_min != null && ` · waiting ${r.waited_min} min`}
                     </div>
                   </div>
@@ -105,8 +110,21 @@ export function HallQueue() {
                     {r.consent_pending && <span className="pill warn">consent pending</span>}
                     {r.alert_failed && <span className="pill bad" title={r.alert_failed_message}>alert failed</span>}
                     <StatusPill status={r.status} />
-                    {r.status === "waiting" && <button className="btn sm" onClick={() => setMoving(r)}>Move</button>}
+                    {r.status === "waiting" && (
+                      <select
+                        className="select sel-move" aria-label={`Move ${r.token} to`} value=""
+                        onChange={(e) => e.target.value && move(r, Number(e.target.value))}
+                      >
+                        <option value="">Move to…</option>
+                        {data.tabs
+                          .filter((tb) => tb.counsellor_id != null && tb.counsellor_id !== r.counsellor.id)
+                          .map((tb) => (
+                            <option key={tb.key} value={tb.counsellor_id as number}>{tb.label} — {tb.count} in queue</option>
+                          ))}
+                      </select>
+                    )}
                     {CAN_REQUEUE.includes(r.status) && <button className="btn sm" onClick={() => requeue(r)}>Requeue</button>}
+                    <button className="btn sm" onClick={() => setDetailsId(r.id)}>Details</button>
                   </div>
                 </li>
               ))}
@@ -115,33 +133,16 @@ export function HallQueue() {
         </>
       )}
 
-      {moving && data && (
+      {confirm && moving && (
         <Dialog title={`Move ${moving.token}`} onClose={() => { setMoving(null); setConfirm(null); }}>
-          {confirm ? (
-            <>
-              <div className="notice">{confirm.message}</div>
-              <div className="actions">
-                <button className="btn" onClick={() => setConfirm(null)}>Cancel</button>
-                <button className="btn primary" onClick={() => move(moving, confirm.counsellorId, true)}>Move anyway</button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p className="muted">Pick a counsellor. Their current queue length is shown.</p>
-              <div style={{ display: "grid", gap: "0.5rem" }}>
-                {data.tabs
-                  .filter((t) => t.counsellor_id != null && t.counsellor_id !== moving.counsellor.id)
-                  .map((t) => (
-                    <button key={t.key} className="btn" onClick={() => move(moving, t.counsellor_id as number)}>
-                      {t.label} — {t.count} in queue
-                    </button>
-                  ))}
-              </div>
-              <div className="actions"><button className="btn" onClick={() => setMoving(null)}>Cancel</button></div>
-            </>
-          )}
+          <div className="notice">{confirm.message}</div>
+          <div className="actions">
+            <button className="btn" onClick={() => { setMoving(null); setConfirm(null); }}>Cancel</button>
+            <button className="btn primary" onClick={() => move(moving, confirm.counsellorId, true)}>Move anyway</button>
+          </div>
         </Dialog>
       )}
+      {detailsId != null && <StudentDetailsDialog path={`hall/students/${detailsId}`} onClose={() => setDetailsId(null)} />}
     </>
   );
 }

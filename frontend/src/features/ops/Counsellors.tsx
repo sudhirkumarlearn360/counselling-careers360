@@ -1,9 +1,16 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../../api/client";
 import { useCentres, useCounsellors } from "../../api/hooks";
 import { Dialog, Field, errText, useToast } from "../../app/ui";
-import { STREAMS, prettyDate } from "../../lib/format";
+import { STREAMS, minutesLabel, prettyDate, streamName } from "../../lib/format";
+
+const DUTY: Record<string, { label: string; tone: string }> = {
+  on_desk: { label: "On Desk", tone: "ok" },
+  on_break: { label: "On Break", tone: "warn" },
+  off_duty: { label: "Off Duty", tone: "grey" },
+};
 
 export function Counsellors() {
   const { data, isLoading } = useCounsellors();
@@ -33,23 +40,34 @@ export function Counsellors() {
 
   return (
     <>
-      <h1>Counsellors</h1>
-      <div className="toolbar"><button className="btn primary" onClick={() => { setError(""); setOpen(true); }}>Add a counsellor</button></div>
+      <div className="pagehead">
+        <div>
+          <h1>Counsellors</h1>
+          <p className="lede">Who covers which streams, where they're posted, and how they're performing.</p>
+        </div>
+        <div className="right"><button className="btn primary" onClick={() => { setError(""); setOpen(true); }}>Add a counsellor</button></div>
+      </div>
       {isLoading && <p role="status">Loading…</p>}
       {data && (
-        <div className="card table-wrap">
+        <div className="table-wrap">
           <table className="t">
-            <thead><tr><th>Name</th><th>Mobile</th><th>Streams</th><th>Posted to</th></tr></thead>
+            <thead><tr><th>Counsellor</th><th>Streams</th><th>Posted to</th><th>Status</th><th>Done</th><th>Avg session</th><th>Ready to apply</th><th /></tr></thead>
             <tbody>
-              {data.map((c) => (
-                <tr key={c.id}>
-                  <td><b>{c.name}</b></td><td>{c.mobile}</td>
-                  <td style={{ whiteSpace: "normal" }}>{c.streams.join(", ")}</td>
-                  <td style={{ whiteSpace: "normal" }}>
-                    {c.postings.length === 0 ? "—" : c.postings.map((p) => `${p.city} · ${prettyDate(p.date)} · ${p.desk_label}`).join(" | ")}
-                  </td>
-                </tr>
-              ))}
+              {data.map((c) => {
+                const p = c.postings.find((x) => x.centre_status === "live") ?? c.postings[0];
+                return (
+                  <tr key={c.id}>
+                    <td><b style={{ fontWeight: 600 }}>{c.name}</b><span className="cell-sub">{c.mobile}</span></td>
+                    <td style={{ whiteSpace: "normal" }}>{c.streams.map(streamName).join(", ")}</td>
+                    <td>{p ? <>{p.city} · {p.desk_label}<span className="cell-sub">{prettyDate(p.date)}</span></> : "—"}</td>
+                    <td>{p ? <span className={`pill ${DUTY[p.duty]?.tone ?? ""}`}>{DUTY[p.duty]?.label ?? p.duty}</span> : "—"}</td>
+                    <td>{c.stats.done}</td>
+                    <td>{minutesLabel(c.stats.avg_session_min)}</td>
+                    <td>{c.stats.ready_to_apply}</td>
+                    <td>{p?.centre_status === "live" && <Link className="btn sm" to={`/console/desk/${c.id}/queue`}>Open desk</Link>}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

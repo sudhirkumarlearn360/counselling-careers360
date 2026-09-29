@@ -1,5 +1,8 @@
 export const NO_DATA = "—";
 
+/** 9811022001 -> 98110 22001 (display only; the stored value stays 10 digits). */
+export const fmtMobile = (m: string): string => (/^\d{10}$/.test(m) ? `${m.slice(0, 5)} ${m.slice(5)}` : m);
+
 export const minutesLabel = (m: number | null | undefined): string => (m == null ? NO_DATA : `${m} min`);
 
 export function elapsedLabel(seconds: number): string {

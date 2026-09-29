@@ -59,9 +59,10 @@ export const useHallStudent = (id: number | null) =>
   });
 
 // --- desk ---------------------------------------------------------------------------------------
-export const useDesk = (asCounsellor?: number) =>
+export const useDesk = (asCounsellor?: number, enabled = true) =>
   useQuery({
     queryKey: ["desk", asCounsellor ?? "me"],
+    enabled,
     queryFn: async () => (await api.get<DeskPayload>("desk/queue", { as_counsellor: asCounsellor })).data,
     refetchInterval: POLL.desk,
   });
@@ -77,9 +78,10 @@ export const useDeskAction = (asCounsellor?: number) => {
   });
 };
 
-export const useMyList = <T,>(path: "desk/my-students" | "desk/my-centres", asCounsellor?: number) =>
+export const useMyList = <T,>(path: "desk/my-students" | "desk/my-centres", asCounsellor?: number, enabled = true) =>
   useQuery({
     queryKey: [path, asCounsellor ?? "me"],
+    enabled,
     queryFn: async () => (await api.get<T[]>(path, { as_counsellor: asCounsellor })).data,
   });
 
@@ -112,4 +114,21 @@ export const useInsights = (centre: string) =>
   useQuery({
     queryKey: ["insights", centre],
     queryFn: async () => (await api.get<Insights>("ops/insights", { centre })).data,
+  });
+
+/** Sidebar counts for the operations lead: live centres, centres, counsellors, students (ops-only endpoints). */
+export const useOpsNavCounts = (enabled: boolean) =>
+  useQuery({
+    queryKey: ["nav-counts", "ops"],
+    enabled,
+    refetchInterval: 15000,
+    queryFn: async () => {
+      const [live, centres, counsellors, students] = await Promise.all([
+        api.get<LiveCentre[]>("ops/live"),
+        api.get<CentreFull[]>("ops/centres"),
+        api.get<CounsellorFull[]>("ops/counsellors"),
+        api.get<OpsStudentRow[]>("ops/students", { limit: 1 }),
+      ]);
+      return { live: live.data.length, centres: centres.data.length, counsellors: counsellors.data.length, students: students.total ?? 0 };
+    },
   });

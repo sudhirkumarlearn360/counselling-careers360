@@ -8,7 +8,20 @@ import { routes } from "../src/app/router";
 import type { Me } from "../src/api/types";
 
 export const API = "http://localhost:8000/api/1";
-export const server = setupServer();
+
+// Sidebar counts are background calls every test would otherwise have to mock; tests override any of these.
+const baseHandlers = [
+  http.get(`${API}/ops/live`, () => HttpResponse.json({ data: [] })),
+  http.get(`${API}/ops/centres`, () => HttpResponse.json({ data: [] })),
+  http.get(`${API}/ops/counsellors`, () => HttpResponse.json({ data: [] })),
+  http.get(`${API}/ops/students`, () => HttpResponse.json({ data: [], count: 0, total: 0 })),
+  http.get(`${API}/desk/my-students`, () => HttpResponse.json({ data: [] })),
+  http.get(`${API}/desk/queue`, () => HttpResponse.json({ data: { centre: null, message: "", queue: [], current: null } })),
+  http.get(`${API}/hall/centres/1/queue`, () =>
+    HttpResponse.json({ data: { centre: {}, header: { waiting: 0, late: 0, wait_promise_min: 30 }, tabs: [], rows: [], query: "", count: 0 } }),
+  ),
+];
+export const server = setupServer(...baseHandlers);
 
 export const ok = (data: unknown, extra: Record<string, unknown> = {}) => HttpResponse.json({ data, ...extra });
 export const fail = (status: number, code: string, message: string, data: Record<string, unknown> = {}) =>

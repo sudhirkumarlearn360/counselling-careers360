@@ -6,7 +6,7 @@ from apps.counsellors.models import Counsellor, Posting
 
 
 def counsellors_qs():
-    return Counsellor.objects.prefetch_related(
+    return Counsellor.objects.order_by("id").prefetch_related(
         Prefetch("postings", queryset=Posting.objects.select_related("centre").order_by("centre__date", "id"))
     )
 

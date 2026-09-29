@@ -176,6 +176,7 @@ export interface DeskPayload {
     in_queue: number;
     waiting_hall: number;
     counselled_today: number;
+    ready_today: number;
     avg_session_min: number | null;
     target_session_min: number;
     late: number;
@@ -206,12 +207,25 @@ export interface LiveCard {
   streams: string[];
   desk_label: string;
   duty: string;
-  serving: { token: string; status: string } | null;
+  serving: { token: string; name: string; status: string } | null;
   queue_length: number;
+  queue_late: number;
   avg_session_min: number;
   counselled_today: number;
 }
+export interface LiveSummary {
+  checked_in: number;
+  self_scan: number;
+  at_desk: number;
+  waiting: number;
+  late: number;
+  counselled: number;
+  no_shows: number;
+  planned: number;
+  capacity_pct: number | null;
+}
 export interface LiveCentre extends CentreLite {
+  summary: LiveSummary;
   counsellors: LiveCard[];
 }
 export interface CentreFull extends CentreLite {
@@ -219,6 +233,8 @@ export interface CentreFull extends CentreLite {
   covered_streams: string[];
   uncovered_streams: string[];
   counsellor_count: number;
+  counsellor_names: string[];
+  student_count: number;
   front_desk_email: string;
 }
 export interface Posting {
@@ -238,6 +254,7 @@ export interface CounsellorFull {
   mobile: string;
   streams: string[];
   expected_session_min: number;
+  stats: { done: number; avg_session_min: number | null; ready_to_apply: number };
   postings: Posting[];
 }
 export interface OpsStudentRow {

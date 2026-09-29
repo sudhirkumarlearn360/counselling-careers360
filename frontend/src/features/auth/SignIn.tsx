@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth, type SignInFailure } from "../../api/auth";
+import { useToast } from "../../app/ui";
 import { defaultPath } from "../../lib/nav";
 import "../../styles/console.css";
 
@@ -8,6 +9,7 @@ const BLANK = "Enter your work email and password";
 
 export function SignIn() {
   const { user, signIn, ready } = useAuth();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -25,6 +27,7 @@ export function SignIn() {
     setBusy(true);
     try {
       await signIn(email, password);
+      toast("Signed in", false, true);
     } catch (err) {
       const failure = (err as { failure?: SignInFailure }).failure;
       setError(failure?.message ?? (err as Error).message);
