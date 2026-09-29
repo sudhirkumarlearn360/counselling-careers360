@@ -7,4 +7,10 @@ The contract (paths, names, roles) is backend/API_ROUTES.md; tests/test_routes.p
 Views live in the owning apps (centres, counsellors, queue, insights); this module only routes them.
 """
 
-urlpatterns = []
+from django.urls import path
+
+from apps.ops import views
+
+urlpatterns = [
+    path("api/<int:version>/ops/live", views.LiveView.as_view(), name="cq.ops.live"),
+]

@@ -135,6 +135,10 @@ LoginAttempt (keyed by normalised email, no FK)
 | `failed_count` | PositiveIntegerField | no | default 0 |
 | `last_failed_at` | DateTimeField | yes |  |
 
+### Third-party: SimpleJWT blacklist (`token_blacklist_outstandingtoken`, `token_blacklist_blacklistedtoken`)
+
+Provided by `rest_framework_simplejwt.token_blacklist` (its own migrations, no CounselQueue migration). `auth/logout` blacklists the refresh token (CQ-4): `OutstandingToken` (user FK, jti unique, token, created_at, expires_at) records issued refresh tokens and `BlacklistedToken` (token 1:1 OutstandingToken, blacklisted_at) marks revoked ones. `OutstandingToken.user` points at StaffUser. Refresh rotation blacklists the old refresh token too.
+
 ### TokenSequence (`queue_tokensequence`)
 
 | Field | Type | Null | Notes |

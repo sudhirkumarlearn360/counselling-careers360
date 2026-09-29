@@ -74,7 +74,7 @@ ROUTES = [
 ]
 
 # Flip names on as their endpoints land (Tasks 2–7).
-IMPLEMENTED: set = set()
+IMPLEMENTED: set = {"cq.auth.login", "cq.auth.logout", "cq.auth.refresh", "cq.auth.me", "cq.ops.live"}
 
 
 def _expected_path(path, kwargs):
