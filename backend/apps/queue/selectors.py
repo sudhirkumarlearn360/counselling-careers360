@@ -66,3 +66,30 @@ def live_overview() -> list:
             }
         )
     return [{**centre_payload(c), "counsellors": cards[c.id]} for c in centres]
+
+
+# --- Queue reads used by the engine (queue-engine: Queue order) --------------------------------------
+
+QUEUE_ORDER = ("-priority", "queue_at", "id")
+
+
+def waiting_queue(counsellor, centre):
+    """A counsellor's queue at a centre: waiting students ordered by (-priority, queue_at, id)."""
+    return Student.objects.filter(
+        centre_id=getattr(centre, "pk", centre),
+        counsellor_id=getattr(counsellor, "pk", counsellor),
+        status=StudentStatus.WAITING,
+    ).order_by(*QUEUE_ORDER)
+
+
+def active_student(counsellor, centre):
+    """The counsellor's called or in-session student at the centre, if any."""
+    return (
+        Student.objects.filter(
+            centre_id=getattr(centre, "pk", centre),
+            counsellor_id=getattr(counsellor, "pk", counsellor),
+            status__in=ACTIVE_STATUSES,
+        )
+        .order_by("id")
+        .first()
+    )
