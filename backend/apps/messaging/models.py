@@ -23,10 +23,10 @@ class Message(models.Model):
 
     # null only for otp_code, which is sent before a student row exists.
     student = models.ForeignKey(
-        "queue.Student", null=True, blank=True, on_delete=models.CASCADE, related_name="messages"
+        "queue.Student", null=True, blank=True, on_delete=models.PROTECT, related_name="messages"
     )
     template = models.CharField(max_length=24, choices=Template.choices)
-    to = models.CharField(max_length=10)
+    to = models.CharField(max_length=16)
     body = models.TextField()
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.QUEUED)
     provider_id = models.CharField(max_length=100, blank=True)
@@ -49,13 +49,16 @@ class OtpCode(models.Model):
     """4-digit check-in code, stored hashed (CQ-18)."""
 
     mobile = models.CharField(max_length=10)  # normalised
-    centre = models.ForeignKey("centres.Centre", on_delete=models.CASCADE, related_name="otp_codes")
-    code_hash = models.CharField(max_length=128)
+    centre = models.ForeignKey("centres.Centre", on_delete=models.PROTECT, related_name="otp_codes")
+    code_hash = models.CharField(max_length=128, db_collation="utf8mb4_bin")
     expires_at = models.DateTimeField()
     attempts = models.PositiveSmallIntegerField(default=0)
     invalidated_at = models.DateTimeField(null=True, blank=True)  # max attempts reached or superseded
     verified_at = models.DateTimeField(null=True, blank=True)
-    verification_nonce = models.CharField(max_length=64, blank=True)  # bound into the signed verification_id
+    # Bound into the signed verification_id; NULL until verified (MySQL UNIQUE allows many NULLs).
+    verification_nonce = models.CharField(
+        max_length=64, null=True, blank=True, unique=True, db_collation="utf8mb4_bin"
+    )
     verification_used_at = models.DateTimeField(null=True, blank=True)  # verification_id is single-use
     created_at = models.DateTimeField(default=timezone.now)
 
@@ -63,7 +66,6 @@ class OtpCode(models.Model):
         ordering = ["-created_at", "-id"]
         indexes = [
             models.Index(fields=["centre", "mobile", "created_at"]),
-            models.Index(fields=["verification_nonce"]),
         ]
 
     def __str__(self):

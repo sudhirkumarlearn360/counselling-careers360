@@ -33,7 +33,7 @@ class Consent(models.TextChoices):
 class TokenSequence(models.Model):
     """One per centre, created with the Centre, shared across streams. Never goes back (CQ-19)."""
 
-    centre = models.OneToOneField("centres.Centre", on_delete=models.CASCADE, related_name="token_sequence")
+    centre = models.OneToOneField("centres.Centre", on_delete=models.PROTECT, related_name="token_sequence")
     last_number = models.PositiveIntegerField(default=0)
 
     def __str__(self):
@@ -70,7 +70,7 @@ class Student(models.Model):
     consent = models.CharField(max_length=8, choices=Consent.choices, default=Consent.PENDING)
     consent_at = models.DateTimeField(null=True, blank=True)
     consent_by = models.ForeignKey(
-        "counsellors.Counsellor", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+        "counsellors.Counsellor", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
     )
 
     # Queue timing (current/latest visit)
@@ -92,7 +92,10 @@ class Student(models.Model):
     budget = models.CharField(max_length=60, blank=True)
     accompanied_by = models.CharField(max_length=100, blank=True)
 
-    access_key = models.CharField(max_length=100, unique=True, default=make_access_key, editable=False)
+    # Signed with SECRET_KEY: rotating the key invalidates live token links (see SCHEMA.md).
+    access_key = models.CharField(
+        max_length=100, unique=True, default=make_access_key, editable=False, db_collation="utf8mb4_bin"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -109,6 +112,8 @@ class Student(models.Model):
             models.Index(fields=["centre", "status"]),
             models.Index(fields=["centre", "mobile"]),
             models.Index(fields=["counsellor", "status", "queue_at"]),
+            models.Index(fields=["centre", "checkin_at"]),  # CQ-59 list filtered by centre
+            models.Index(fields=["checkin_at"]),  # CQ-59 all-centres list, newest first
         ]
 
     def __str__(self):
@@ -118,11 +123,13 @@ class Student(models.Model):
 class SessionRecord(models.Model):
     """One row per complete_session, so a requeued student keeps earlier sessions (CQ-21/38/60/61)."""
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="session_records")
+    student = models.ForeignKey(Student, on_delete=models.PROTECT, related_name="session_records")
     counsellor = models.ForeignKey(
         "counsellors.Counsellor", on_delete=models.PROTECT, related_name="session_records"
     )
     centre = models.ForeignKey("centres.Centre", on_delete=models.PROTECT, related_name="session_records")
+    # Snapshots taken at completion; later edits to the Student do not change them.
+    queue_at = models.DateTimeField()  # the visit's queue start, for wait = called_at - queue_at
     called_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField()
     ended_at = models.DateTimeField()
@@ -132,6 +139,11 @@ class SessionRecord(models.Model):
     class Meta:
         ordering = ["ended_at", "id"]
         indexes = [models.Index(fields=["centre", "counsellor", "ended_at"])]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(ended_at__gte=models.F("started_at")), name="sessionrecord_ends_after_start"
+            ),
+        ]
 
     def __str__(self):
         return f"{self.student} with {self.counsellor}"
@@ -140,11 +152,11 @@ class SessionRecord(models.Model):
 class Note(models.Model):
     """Counsellor notes. No delete (CQ-45)."""
 
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name="notes")
+    student = models.ForeignKey(Student, on_delete=models.PROTECT, related_name="notes")
     text = models.TextField()
     author_name = models.CharField(max_length=120)
     author = models.ForeignKey(
-        "counsellors.Counsellor", null=True, blank=True, on_delete=models.SET_NULL, related_name="notes"
+        "counsellors.Counsellor", null=True, blank=True, on_delete=models.PROTECT, related_name="notes"
     )
     created_at = models.DateTimeField(default=timezone.now)
 
@@ -178,19 +190,19 @@ class AuditEvent(models.Model):
         EXPORTED = "exported"
 
     student = models.ForeignKey(
-        Student, null=True, blank=True, on_delete=models.CASCADE, related_name="audit_events"
+        Student, null=True, blank=True, on_delete=models.PROTECT, related_name="audit_events"
     )  # null = centre-level event
-    centre = models.ForeignKey("centres.Centre", on_delete=models.CASCADE, related_name="audit_events")
+    centre = models.ForeignKey("centres.Centre", on_delete=models.PROTECT, related_name="audit_events")
     verb = models.CharField(max_length=20, choices=Verb.choices)
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
         blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         related_name="audit_events",
     )  # null = the student
     on_behalf_of = models.ForeignKey(
-        "counsellors.Counsellor", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+        "counsellors.Counsellor", null=True, blank=True, on_delete=models.PROTECT, related_name="+"
     )  # set when an ops lead works a desk (CQ-5)
     at = models.DateTimeField(default=timezone.now)
     data = models.JSONField(default=dict, blank=True)

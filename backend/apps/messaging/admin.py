@@ -1,10 +1,11 @@
 from django.contrib import admin
 
+from apps.common.admin import NoDeleteAdminMixin
 from apps.messaging.models import Message, OtpCode
 
 
 @admin.register(Message)
-class MessageAdmin(admin.ModelAdmin):
+class MessageAdmin(NoDeleteAdminMixin, admin.ModelAdmin):
     list_display = ["created_at", "template", "to", "status", "student"]
     list_filter = ["template", "status"]
 

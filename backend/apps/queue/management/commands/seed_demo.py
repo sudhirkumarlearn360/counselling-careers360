@@ -2,7 +2,8 @@
 
 Idempotent: centres, counsellors, postings and users are upserted by natural key; students are
 created only if their (centre, token) is missing, so a rerun never duplicates or clobbers live state.
-`--reset` deletes the demo centres' students first and seeds them fresh (times relative to now).
+`--reset` deletes the demo centres' students and their history (children first; every FK is PROTECT)
+and seeds them fresh (times relative to now).
 
 Students are written directly through the ORM because this runs before any queue service exists.
 Passwords: `admin123` / `desk123` only when DEBUG; otherwise SEED_ADMIN_PASSWORD / SEED_STAFF_PASSWORD
@@ -22,6 +23,7 @@ from django.utils import timezone
 from apps.accounts.models import Role, StaffUser
 from apps.centres.models import Centre, CentreStatus
 from apps.counsellors.models import Counsellor, Duty, Posting
+from apps.messaging.models import Message, OtpCode
 from apps.queue.models import (
     AuditEvent,
     Consent,
@@ -265,6 +267,8 @@ STUDENTS: list[dict[str, Any]] = [
         status=StudentStatus.NO_SHOW,
         consent=Consent.GIVEN,
         checkin=45,
+        first_called=26,
+        missed=24,
         called=20,
         recalls=2,
         course="MBBS",
@@ -344,14 +348,14 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         today = timezone.localdate()
+        if options["reset"]:
+            self._reset()
         centres = self._centres(today)
         counsellors = self._counsellors(centres)
         users = self._users(centres, counsellors)
         gwalior = centres["gwalior-demo"]
-        if options["reset"]:
-            Student.objects.filter(centre__in=centres.values()).delete()
-            AuditEvent.objects.filter(centre__in=centres.values()).delete()
-        created = self._students(gwalior, counsellors, users["reception@careers360.com"], today)
+        self._centre_live_event(gwalior, users["admin@careers360.com"])
+        created = self._students(gwalior, counsellors, users, today)
         seq = TokenSequence.objects.select_for_update().get(centre=gwalior)
         if seq.last_number < GWALIOR_LAST_TOKEN:  # never move a sequence backwards
             seq.last_number = GWALIOR_LAST_TOKEN
@@ -362,6 +366,21 @@ class Command(BaseCommand):
                 f"{created} new students."
             )
         )
+
+    # --- reset ------------------------------------------------------------
+    def _reset(self):
+        """Every FK into Student/Centre is PROTECT, so delete children first, in a fixed safe order.
+
+        Centres, counsellors, postings and users are kept (they are upserted); sequences never rewind.
+        """
+        centres = Centre.objects.filter(slug__in=[row[0] for row in CENTRES])
+        students = Student.objects.filter(centre__in=centres)
+        Message.objects.filter(student__in=students).delete()
+        Note.objects.filter(student__in=students).delete()
+        SessionRecord.objects.filter(student__in=students).delete()
+        AuditEvent.objects.filter(centre__in=centres).delete()  # student-level and centre-level
+        students.delete()
+        OtpCode.objects.filter(centre__in=centres).delete()
 
     # --- centres ----------------------------------------------------------
     def _centres(self, today: dt.date) -> dict[str, Centre]:
@@ -380,17 +399,18 @@ class Command(BaseCommand):
                     front_desk_phone=FRONT_DESK_PHONE,
                 ),
             )
-            if (
-                status == CentreStatus.LIVE
-                and not AuditEvent.objects.filter(
-                    centre=centre, student=None, verb=AuditEvent.Verb.CENTRE_LIVE
-                ).exists()
-            ):
-                AuditEvent.objects.create(
-                    centre=centre, verb=AuditEvent.Verb.CENTRE_LIVE, data={"seed": True}
-                )
             out[slug] = centre
         return out
+
+    def _centre_live_event(self, centre: Centre, admin: StaffUser):
+        if centre.status != CentreStatus.LIVE:
+            return
+        AuditEvent.objects.get_or_create(
+            centre=centre,
+            student=None,
+            verb=AuditEvent.Verb.CENTRE_LIVE,
+            defaults=dict(actor=admin, data={"seed": True}),
+        )
 
     # --- counsellors + postings ---------------------------------------------
     def _counsellors(self, centres: dict[str, Centre]) -> dict[str, Counsellor]:
@@ -453,22 +473,27 @@ class Command(BaseCommand):
 
     # --- students -------------------------------------------------------------
     def _students(
-        self, centre: Centre, counsellors: dict[str, Counsellor], reception: StaffUser, today: dt.date
+        self, centre: Centre, counsellors: dict[str, Counsellor], users: dict[str, StaffUser], today: dt.date
     ) -> int:
         now = timezone.now()
         created = 0
         for spec in STUDENTS:
             if Student.objects.filter(centre=centre, token=spec["token"]).exists():
                 continue
-            self._create_student(centre, counsellors, reception, today, now, spec)
+            self._create_student(centre, counsellors, users, today, now, spec)
             created += 1
         return created
 
-    def _create_student(self, centre, counsellors, reception, today, now, spec):
+    def _create_student(self, centre, counsellors, users, today, now, spec):
+        """Replays the visit as audit rows. Desk actions are by the counsellor's user; the student's
+        own actions (self check-in, rating) have actor None; a desk check-in is by reception."""
+
         def ago(key):
             return now - spec[key] * MIN if spec.get(key) is not None else None
 
         counsellor = counsellors[spec["counsellor"]]
+        desk_user = counsellor.user
+        reception = users["reception@careers360.com"]
         source = spec.get("source", Source.SELF)
         checkin_at = ago("checkin")
         fields = {k: spec[k] for k in STUDENT_FIELDS if k in spec}
@@ -481,7 +506,7 @@ class Command(BaseCommand):
             consent=spec["consent"],
             consent_at=checkin_at if spec["consent"] == Consent.GIVEN else None,
             checkin_at=checkin_at,
-            queue_at=checkin_at,
+            queue_at=ago("missed") or checkin_at,  # a first miss restarts the queue clock
             called_at=ago("called"),
             started_at=ago("started"),
             ended_at=ago("ended"),
@@ -503,25 +528,31 @@ class Command(BaseCommand):
             token=student.token,
             source=source,
         )
+        if spec.get("first_called") is not None:  # called, missed once, back in the queue
+            audit(AuditEvent.Verb.CALLED, ago("first_called"), actor=desk_user, counsellor_id=counsellor.id)
+            audit(AuditEvent.Verb.MISSED, ago("missed"), actor=desk_user, recalls=1)
         if student.called_at:
-            audit(AuditEvent.Verb.CALLED, student.called_at, counsellor_id=counsellor.id)
+            audit(AuditEvent.Verb.CALLED, student.called_at, actor=desk_user, counsellor_id=counsellor.id)
         if student.started_at:
-            audit(AuditEvent.Verb.STARTED, student.started_at)
+            audit(AuditEvent.Verb.STARTED, student.started_at, actor=desk_user)
         if student.status == StudentStatus.NO_SHOW:
-            audit(AuditEvent.Verb.NO_SHOW, student.called_at + 3 * MIN, recalls=student.recalls)
+            audit(
+                AuditEvent.Verb.NO_SHOW, student.called_at + 3 * MIN, actor=desk_user, recalls=student.recalls
+            )
         if student.ended_at:
             SessionRecord.objects.create(
                 student=student,
                 counsellor=counsellor,
                 centre=centre,
+                queue_at=student.queue_at,
                 called_at=student.called_at,
                 started_at=student.started_at,
                 ended_at=student.ended_at,
                 outcome=student.outcome,
             )
-            audit(AuditEvent.Verb.COMPLETED, student.ended_at)
+            audit(AuditEvent.Verb.COMPLETED, student.ended_at, actor=desk_user)
         if student.rating:
-            audit(AuditEvent.Verb.RATED, student.ended_at + MIN, rating=student.rating)
+            audit(AuditEvent.Verb.RATED, student.ended_at + MIN, rating=student.rating)  # by the student
         for minutes_ago, text in spec.get("notes", []):
             note = Note.objects.create(
                 student=student,
@@ -530,4 +561,4 @@ class Command(BaseCommand):
                 author=counsellor,
                 created_at=now - minutes_ago * MIN,
             )
-            audit(AuditEvent.Verb.NOTED, note.created_at, note_id=note.id)
+            audit(AuditEvent.Verb.NOTED, note.created_at, actor=desk_user, note_id=note.id)

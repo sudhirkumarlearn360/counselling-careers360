@@ -1,5 +1,5 @@
 from django.apps import apps
-from django.db import models, transaction
+from django.db import IntegrityError, models, transaction
 from django.utils.text import slugify
 
 
@@ -43,20 +43,32 @@ class Centre(models.Model):
             slug, n = f"{base}-{n}", n + 1
         return slug
 
+    SLUG_ATTEMPTS = 2  # one retry if a concurrent insert takes the slug we picked
+
     def save(self, *args, **kwargs):
         adding = self._state.adding
-        if not self.slug:
-            self.slug = self._unique_slug()
-        with transaction.atomic():
-            super().save(*args, **kwargs)
-            if adding:
-                # Every centre has its settings row and its token sequence from birth (CQ-19).
-                CentreSettings.objects.get_or_create(centre=self)
-                apps.get_model("queue", "TokenSequence").objects.get_or_create(centre=self)
+        auto_slug = not self.slug
+        for attempt in range(self.SLUG_ATTEMPTS):
+            if auto_slug:
+                self.slug = self._unique_slug()
+            try:
+                with transaction.atomic():
+                    super().save(*args, **kwargs)
+                    if adding:
+                        # Every centre has its settings row and its token sequence from birth (CQ-19).
+                        CentreSettings.objects.get_or_create(centre=self)
+                        apps.get_model("queue", "TokenSequence").objects.get_or_create(centre=self)
+                return
+            except IntegrityError:
+                lost_slug_race = (
+                    auto_slug and Centre.objects.filter(slug=self.slug).exclude(pk=self.pk).exists()
+                )
+                if not lost_slug_race or attempt == self.SLUG_ATTEMPTS - 1:
+                    raise
 
 
 class CentreSettings(models.Model):
-    centre = models.OneToOneField(Centre, on_delete=models.CASCADE, related_name="settings")
+    centre = models.OneToOneField(Centre, on_delete=models.PROTECT, related_name="settings")
     target_session_min = models.PositiveSmallIntegerField(default=15)
     wait_sla_min = models.PositiveSmallIntegerField(default=30)
     recall_limit = models.PositiveSmallIntegerField(default=2)
@@ -64,6 +76,15 @@ class CentreSettings(models.Model):
 
     class Meta:
         verbose_name_plural = "centre settings"
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(recall_limit__gte=1), name="centresettings_recall_limit_gte_1"
+            ),
+            models.CheckConstraint(
+                check=models.Q(target_session_min__gte=1), name="centresettings_target_session_gte_1"
+            ),
+            models.CheckConstraint(check=models.Q(wait_sla_min__gte=1), name="centresettings_wait_sla_gte_1"),
+        ]
 
     def __str__(self):
         return f"Settings for {self.centre}"

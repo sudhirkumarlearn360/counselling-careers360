@@ -41,10 +41,10 @@ class StaffUser(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=120)
     role = models.CharField(max_length=12, choices=Role.choices)
     centre = models.ForeignKey(
-        "centres.Centre", null=True, blank=True, on_delete=models.SET_NULL, related_name="staff"
+        "centres.Centre", null=True, blank=True, on_delete=models.PROTECT, related_name="staff"
     )  # reception's centre
     counsellor = models.OneToOneField(
-        "counsellors.Counsellor", null=True, blank=True, on_delete=models.SET_NULL, related_name="user"
+        "counsellors.Counsellor", null=True, blank=True, on_delete=models.PROTECT, related_name="user"
     )
     title = models.CharField(max_length=120, blank=True)
     is_active = models.BooleanField(default=True)

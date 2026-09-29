@@ -168,6 +168,7 @@ def test_cq21_session_record_and_note_and_audit_rows():
         student=s,
         counsellor=c,
         centre=centre,
+        queue_at=s.queue_at,
         called_at=now,
         started_at=now,
         ended_at=now,

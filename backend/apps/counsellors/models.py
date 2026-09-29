@@ -19,6 +19,11 @@ class Counsellor(models.Model):
 
     class Meta:
         ordering = ["name"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(expected_session_min__gte=1), name="counsellor_expected_session_gte_1"
+            ),
+        ]
 
     def __str__(self):
         return self.name
@@ -31,7 +36,7 @@ class Posting(models.Model):
     """The roster: one counsellor at one centre at one desk (CQ-9/11/50)."""
 
     counsellor = models.ForeignKey(Counsellor, on_delete=models.PROTECT, related_name="postings")
-    centre = models.ForeignKey("centres.Centre", on_delete=models.CASCADE, related_name="postings")
+    centre = models.ForeignKey("centres.Centre", on_delete=models.PROTECT, related_name="postings")
     desk_label = models.CharField(max_length=40)
     duty = models.CharField(max_length=10, choices=Duty.choices, default=Duty.OFF_DUTY)
     created_at = models.DateTimeField(auto_now_add=True)

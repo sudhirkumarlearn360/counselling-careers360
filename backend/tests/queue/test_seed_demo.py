@@ -77,3 +77,37 @@ def test_seed_demo_reset_reseeds_students_without_rewinding_tokens():
     assert Student.objects.get(token="PCM-03").name == "Sahil Yadav"
     assert Student.objects.count() == 9
     assert TokenSequence.objects.get(centre=gwalior).last_number == 14
+
+
+@override_settings(DEBUG=True)
+def test_seed_demo_attributes_desk_actions_to_counsellor_users():
+    from apps.queue.models import AuditEvent
+
+    call_command("seed_demo")
+    rahul = StaffUser.objects.get(email="rahul@careers360.com")
+    admin = StaffUser.objects.get(email="admin@careers360.com")
+    done = Student.objects.get(token="PCB-01")
+    for verb in ("called", "started", "completed", "noted"):
+        assert done.audit_events.get(verb=verb).actor == rahul, verb
+    assert done.audit_events.get(verb="rated").actor is None  # the student
+    live = AuditEvent.objects.get(centre__city="Gwalior", student=None, verb="centre_live")
+    assert live.actor == admin
+    no_show = Student.objects.get(token="PCB-07")
+    verbs = list(no_show.audit_events.values_list("verb", flat=True))
+    assert verbs == ["checked_in", "called", "missed", "called", "no_show"]
+    assert all(e.actor == rahul for e in no_show.audit_events.exclude(verb="checked_in"))
+    assert (
+        Student.objects.get(token="PCB-04").audit_events.get(verb="checked_in").actor.role == Role.RECEPTION
+    )
+    assert done.session_records.get().queue_at == done.queue_at
+
+
+@override_settings(DEBUG=True)
+def test_seed_demo_reset_twice_keeps_centre_live_event():
+    from apps.queue.models import AuditEvent
+
+    call_command("seed_demo")
+    call_command("seed_demo", "--reset")
+    call_command("seed_demo", "--reset")
+    assert AuditEvent.objects.filter(centre__city="Gwalior", student=None, verb="centre_live").count() == 1
+    assert Student.objects.count() == 9 and SessionRecord.objects.count() == 1
