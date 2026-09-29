@@ -91,21 +91,21 @@ export function TokenPage() {
     <StudentShell wide>
       <div className="token-grid">
         <div>
-          <div className="token-hero">
-            <div className="sub">Your token</div>
-            <div className="code" aria-label={`Token ${t.token}`}>{t.token}</div>
-            <div className="sub">{t.stream_name}</div>
-          </div>
-          <div className="stu-card" style={{ marginTop: "1rem" }}>
-            <dl className="stu-meta">
-              <div><dt>Counsellor</dt><dd>{t.counsellor}</dd></div>
-              <div><dt>Desk</dt><dd>{t.desk}</dd></div>
-              <div><dt>Venue</dt><dd>{t.venue}</dd></div>
-              <div><dt>Date</dt><dd>{prettyDate(t.date)}</dd></div>
-              <div><dt>Checked in</dt><dd>{t.checked_in_at}</dd></div>
-              <div><dt>Name</dt><dd>{t.name}</dd></div>
-              <div><dt>Mobile</dt><dd>{t.mobile}</dd></div>
-            </dl>
+          <div className="ticket">
+            <div className="top">
+              <div className="lbl">Your token</div>
+              <div className="big" aria-label={`Token ${t.token}`}>{t.token}</div>
+              <div className="sub">{t.stream_name}</div>
+            </div>
+            <div className="perf" />
+            <div className="bot">
+              {[
+                ["Counsellor", t.counsellor], ["Desk", t.desk], ["Venue", t.venue], ["Date", prettyDate(t.date)],
+                ["Checked in", t.checked_in_at], ["Name", t.name], ["Mobile", t.mobile],
+              ].map(([k, v]) => (
+                <div className="kv" key={k}><span>{k}</span><b>{v}</b></div>
+              ))}
+            </div>
           </div>
         </div>
 

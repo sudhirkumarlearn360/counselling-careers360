@@ -100,7 +100,6 @@ describe("student pages are fully responsive (CQ-12, user priority)", () => {
     expect(fixedWidths.filter((w) => w > 320)).toEqual([]);
   });
   it("uses a 16px+ input font so phones don't zoom on focus", () => {
-    const global = readFileSync(resolve(__dirname, "../src/styles/global.css"), "utf8");
-    expect(global).toMatch(/\.input[^}]*font-size:\s*1rem/s);
+    expect(css).toMatch(/\.stu \.input[^}]*font-size:\s*1rem/s);
   });
 });

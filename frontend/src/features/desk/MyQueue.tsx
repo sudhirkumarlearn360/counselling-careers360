@@ -45,7 +45,7 @@ export function MyQueue() {
   return (
     <>
       <h1>My queue</h1>
-      <p className="muted">
+      <p className="lede" style={{ marginBottom: 14 }}>
         {data.centre.city} · {data.centre.venue} · {prettyDate(data.centre.date)} · {data.centre.opens_at}–{data.centre.closes_at} ·{" "}
         <b>{data.desk}</b>
       </p>
@@ -95,26 +95,26 @@ export function MyQueue() {
       </div>
 
       {data.queue.length === 0 ? (
-        <div className="card"><p>Your queue is clear — new check-ins land here as students scan in.</p></div>
+        <div className="card empty"><p style={{ margin: 0 }}>Your queue is clear — new check-ins land here as students scan in.</p></div>
       ) : (
-        <div className="card table-wrap">
-          <table className="t">
-            <thead><tr><th>Token</th><th>Name</th><th>Stream</th><th>Class</th><th>Waited</th><th>Entry</th><th /></tr></thead>
-            <tbody>
-              {data.queue.map((r) => (
-                <tr key={r.id} className={r.late ? "late" : ""} style={r.next ? { background: "var(--sky)" } : undefined}>
-                  <td><b>{r.token}</b> {r.next && <span className="pill ok">Next</span>}</td>
-                  <td>{r.name} {r.consent_pending && <span className="pill warn">consent pending</span>}</td>
-                  <td>{streamName(r.stream)}</td>
-                  <td>{r.klass || "—"}</td>
-                  <td>{r.waited_min} min</td>
-                  <td>{r.source === "desk" ? "Added at desk" : "Self check-in"}</td>
-                  <td>{phase.pullForward && !r.next && <button className="btn sm" onClick={() => run(`desk/students/${r.id}/pull-forward`, undefined, `${r.token} is next.`)}>Pull forward</button>}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="qlist" aria-label="My queue">
+          {data.queue.map((r) => (
+            <li key={r.id} className={`qitem${r.next ? " next" : ""}${r.late ? " late" : ""}`}>
+              <span className="num">{r.token}</span>
+              <div className="body">
+                <div className="nm">{r.name}</div>
+                <div className="meta">
+                  {streamName(r.stream)} · {r.klass || "—"} · waited {r.waited_min} min · {r.source === "desk" ? "Added at desk" : "Self check-in"}
+                </div>
+              </div>
+              <div className="act">
+                {r.next && <span className="pill ok">Next</span>}
+                {r.consent_pending && <span className="pill warn">consent pending</span>}
+                {phase.pullForward && !r.next && <button className="btn sm" onClick={() => run(`desk/students/${r.id}/pull-forward`, undefined, `${r.token} is next.`)}>Pull forward</button>}
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </>
   );

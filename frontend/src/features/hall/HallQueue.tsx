@@ -44,7 +44,13 @@ export function HallQueue() {
 
   return (
     <>
-      <h1>Hall queue</h1>
+      <div className="pagehead">
+        <div>
+          <h1>Hall queue</h1>
+          <p className="lede">Everyone in the room, split by desk. Search finds anyone from today — including lost slips and missed calls.</p>
+        </div>
+        {data && data.header.late > 0 && <div className="right"><span className="pill bad">{data.header.late} over {data.header.wait_promise_min} min</span></div>}
+      </div>
       {picker}
       {isLoading && <p role="status">Loading…</p>}
       {data && (
@@ -72,43 +78,39 @@ export function HallQueue() {
             ))}
           </div>
           {data.rows.length === 0 ? (
-            <div className="card">
+            <div className="card empty">
               {q.trim() ? (
-                <p>No match for “{q.trim()}”. Try the last four digits of their mobile.</p>
+                <>
+                  <b>No match for “{q.trim()}”.</b>
+                  <p style={{ margin: 0 }}>Try the last four digits of their mobile.</p>
+                </>
               ) : (
-                <p>No one in the hall yet — tokens appear here as students scan in.</p>
+                <p style={{ margin: 0 }}>No one in the hall yet — tokens appear here as students scan in.</p>
               )}
             </div>
           ) : (
-            <div className="card table-wrap">
-              <table className="t">
-                <thead>
-                  <tr><th>Token</th><th>Name</th><th>Counsellor</th><th>Stream</th><th>Mobile</th><th>Waited</th><th>Status</th><th /></tr>
-                </thead>
-                <tbody>
-                  {data.rows.map((r) => (
-                    <tr key={r.id} className={r.late ? "late" : ""}>
-                      <td><b>{r.token}</b></td>
-                      <td>{r.name}</td>
-                      <td>{r.counsellor.name} · {r.counsellor.desk}</td>
-                      <td>{streamName(r.stream)}</td>
-                      <td>{r.mobile}</td>
-                      <td>{r.waited_min == null ? "—" : `${r.waited_min} min`}</td>
-                      <td>
-                        <StatusPill status={r.status} />
-                        {r.late && <span className="pill bad"> late</span>}
-                        {r.consent_pending && <span className="pill warn"> consent pending</span>}
-                        {r.alert_failed && <span className="pill bad" title={r.alert_failed_message}> alert failed</span>}
-                      </td>
-                      <td>
-                        {r.status === "waiting" && <button className="btn sm" onClick={() => setMoving(r)}>Move</button>}
-                        {CAN_REQUEUE.includes(r.status) && <button className="btn sm" onClick={() => requeue(r)}>Requeue</button>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ul className="qlist" aria-label="Students in the hall">
+              {data.rows.map((r) => (
+                <li key={r.id} className={`qitem${r.late ? " late" : ""}`}>
+                  <span className="num">{r.token}</span>
+                  <div className="body">
+                    <div className="nm">{r.name}</div>
+                    <div className="meta">
+                      {r.counsellor.name} · {r.counsellor.desk} · {streamName(r.stream)} · {r.mobile}
+                      {r.waited_min != null && ` · waiting ${r.waited_min} min`}
+                    </div>
+                  </div>
+                  <div className="act">
+                    {r.late && <span className="pill bad">late</span>}
+                    {r.consent_pending && <span className="pill warn">consent pending</span>}
+                    {r.alert_failed && <span className="pill bad" title={r.alert_failed_message}>alert failed</span>}
+                    <StatusPill status={r.status} />
+                    {r.status === "waiting" && <button className="btn sm" onClick={() => setMoving(r)}>Move</button>}
+                    {CAN_REQUEUE.includes(r.status) && <button className="btn sm" onClick={() => requeue(r)}>Requeue</button>}
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </>
       )}

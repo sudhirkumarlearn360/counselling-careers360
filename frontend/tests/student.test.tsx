@@ -21,12 +21,13 @@ describe("CQ-12/13/14 landing", () => {
   it("names the centre, shows a dash (not zero) before anyone is called, and the three steps", async () => {
     server.use(http.get(`${API}/public/centres/${SLUG}`, () => ok(landing())));
     renderAt(`/c/${SLUG}`);
-    expect(await screen.findByRole("heading", { name: "Gwalior counselling" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /Your future college/ })).toBeInTheDocument();
+    expect(screen.getByText(/Live today · Gwalior/)).toBeInTheDocument();
     expect(screen.getAllByText(/Hotel Landmark/).length).toBeGreaterThan(0);
     const stats = screen.getByLabelText("How busy is the hall");
     expect(within(stats).getByText("—")).toBeInTheDocument();
     expect(within(stats).getByText("4")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Check in" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Get my free counselling token/ })).toBeInTheDocument();
     expect(screen.getByText("Receive your token on WhatsApp")).toBeInTheDocument();
     expect(screen.getByText("All optional — come as you are.")).toBeInTheDocument();
     expect(screen.getByText(/98110 00000/)).toBeInTheDocument();
@@ -36,7 +37,7 @@ describe("CQ-12/13/14 landing", () => {
     server.use(http.get(`${API}/public/centres/${SLUG}`, () => ok(landing({ open: false, message: "This centre isn't open for check-in — it runs on 1 Oct 2026." }))));
     renderAt(`/c/${SLUG}`);
     expect(await screen.findByText(/This centre isn't open for check-in/)).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Check in" })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Get my free counselling token/ })).toBeNull();
   });
 
   it("CQ-26: reopening on the same phone returns to the live token, not a blank form", async () => {

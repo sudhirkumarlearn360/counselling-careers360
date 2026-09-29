@@ -38,39 +38,43 @@ export function SignIn() {
 
   return (
     <div className="login">
-      <form className="card" onSubmit={submit} noValidate>
-        <h1 style={{ marginBottom: "0.25rem" }}>CounselQueue</h1>
-        <p className="muted" style={{ marginTop: 0 }}>Sign in with your work account</p>
-        <div className="field">
-          <label htmlFor="email">Work email</label>
-          <input id="email" className="input" type="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <div className="left">
+        <div className="brand">Counsel<em>Queue</em></div>
+        <div className="pitch">
+          <h2>Every counselling desk, on one screen.</h2>
+          <p>Tokens, queues, consent and student records for Careers360 city drives. Sign in to reach the centre you're rostered on today.</p>
         </div>
-        <div className="field">
-          <label htmlFor="password">Password</label>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <input
-              id="password" className="input" type={show ? "text" : "password"} autoComplete="current-password"
-              value={password} onChange={(e) => setPassword(e.target.value)}
-            />
-            <button type="button" className="btn" aria-pressed={show} onClick={() => setShow((s) => !s)}>
-              {show ? "Hide" : "Show"}
-            </button>
-          </div>
-        </div>
-        {error && <div className="notice bad" role="alert" style={{ marginBottom: "0.75rem" }}>{error}</div>}
-        {notice && (
-          <div className="notice" role="status" style={{ marginBottom: "0.75rem" }} data-tries={tries}>
-            <b>Still stuck?</b>
-            {notice}
-          </div>
-        )}
-        <button className="btn primary" type="submit" disabled={busy} style={{ width: "100%" }}>
-          {busy ? "Signing in…" : "Sign in"}
-        </button>
-        <p className="muted" style={{ fontSize: "0.8125rem" }}>
+        <div className="foot">
+          Careers360 internal tool. Access is logged.
+          <br />
           Trouble signing in? IT helpdesk 1800 572 9877 · it-support@careers360.com
-        </p>
-      </form>
+        </div>
+      </div>
+      <div className="right">
+        <form onSubmit={submit} noValidate>
+          <h1>Sign in</h1>
+          <p className="muted" style={{ marginTop: 0 }}>Use your Careers360 work account.</p>
+          <div className="field">
+            <label htmlFor="email">Work email</label>
+            <input id="email" className="input" type="email" placeholder="name@careers360.com" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="password">Password</label>
+            <div className="pw">
+              <input id="password" className="input" type={show ? "text" : "password"} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <button type="button" aria-pressed={show} onClick={() => setShow((s) => !s)}>{show ? "Hide" : "Show"}</button>
+            </div>
+          </div>
+          {error && <div className="notice bad" role="alert" style={{ marginBottom: "0.75rem" }}>{error}</div>}
+          {notice && (
+            <div className="notice" role="status" style={{ marginBottom: "0.75rem" }} data-tries={tries}>
+              <b>Still stuck?</b>
+              {notice}
+            </div>
+          )}
+          <button className="btn primary" type="submit" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
+        </form>
+      </div>
     </div>
   );
 }

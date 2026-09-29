@@ -25,11 +25,11 @@ describe("CQ-31…34 front desk hall queue", () => {
   it("lists the hall with late, consent-pending and failed-alert flags; tabs include an empty desk", async () => {
     server.use(http.get(`${API}/hall/centres/1/queue`, () => ok(hall())));
     renderAt("/console/hall");
-    const table = await screen.findByRole("table");
-    expect(within(table).getByText("PCM-01")).toBeInTheDocument();
-    expect(within(table).getByText("late")).toBeInTheDocument();
-    expect(within(table).getByText("consent pending")).toBeInTheDocument();
-    expect(within(table).getByText("alert failed")).toHaveAttribute("title", expect.stringContaining("turn alert"));
+    const list = await screen.findByRole("list", { name: "Students in the hall" });
+    expect(within(list).getByText("PCM-01")).toBeInTheDocument();
+    expect(within(list).getByText("late")).toBeInTheDocument();
+    expect(within(list).getByText("consent pending")).toBeInTheDocument();
+    expect(within(list).getByText("alert failed")).toHaveAttribute("title", expect.stringContaining("turn alert"));
     const tabs = screen.getAllByRole("tab");
     expect(tabs[0]).toHaveTextContent("All students");
     expect(tabs[0]).toHaveAttribute("aria-selected", "true");
@@ -41,7 +41,7 @@ describe("CQ-31…34 front desk hall queue", () => {
     const seen: string[] = [];
     server.use(http.get(`${API}/hall/centres/1/queue`, ({ request }) => { seen.push(new URL(request.url).search); return ok(hall()); }));
     renderAt("/console/hall");
-    await screen.findByRole("table");
+    await screen.findByRole("list", { name: "Students in the hall" });
     await userEvent.click(screen.getAllByRole("tab")[1]);
     await waitFor(() => expect(seen.some((s) => s.includes("counsellor=3"))).toBe(true));
     await userEvent.type(screen.getByRole("searchbox"), "2001");
@@ -57,7 +57,8 @@ describe("CQ-31…34 front desk hall queue", () => {
     renderAt("/console/hall");
     expect(await screen.findByText("No one in the hall yet — tokens appear here as students scan in.")).toBeInTheDocument();
     await userEvent.type(screen.getByRole("searchbox"), "zzzz");
-    expect(await screen.findByText(/No match for “zzzz”\. Try the last four digits of their mobile\./)).toBeInTheDocument();
+    expect(await screen.findByText("No match for “zzzz”.")).toBeInTheDocument();
+    expect(screen.getByText("Try the last four digits of their mobile.")).toBeInTheDocument();
     expect(await screen.findByText("0 results")).toBeInTheDocument();
   });
 
@@ -107,7 +108,7 @@ describe("CQ-31…34 front desk hall queue", () => {
     let asked = 0;
     server.use(http.get(`${API}/ops/live`, () => { asked += 1; return fail(403, "role_not_allowed", "Your role can't open this screen."); }), http.get(`${API}/hall/centres/1/queue`, () => ok(hall())));
     renderAt("/console/hall");
-    await screen.findByRole("table");
+    await screen.findByRole("list", { name: "Students in the hall" });
     expect(asked).toBe(0);
   });
 });
@@ -174,7 +175,7 @@ describe("CQ-39…49 counsellor desk", () => {
     expect(screen.getByText("in my queue")).toBeInTheDocument();
     expect(screen.getByText("Next")).toBeInTheDocument();
     expect(screen.getAllByText("consent pending").length).toBeGreaterThan(0);
-    expect(screen.getByText("Added at desk")).toBeInTheDocument();
+    expect(screen.getByText(/Added at desk/)).toBeInTheDocument();
     expect(screen.getByText(/Hotel Landmark/)).toBeInTheDocument();
   });
 
@@ -191,9 +192,9 @@ describe("CQ-39…49 counsellor desk", () => {
     server.use(http.get(`${API}/desk/queue`, () => ok(desk(null))));
     renderAt("/console/queue");
     expect(await screen.findByLabelText("Call a token")).toBeInTheDocument();
-    const rows = screen.getAllByRole("row");
-    expect(within(rows[1]).queryByRole("button", { name: "Pull forward" })).toBeNull(); // none on the top row
-    expect(within(rows[2]).getByRole("button", { name: "Pull forward" })).toBeInTheDocument();
+    const rows = within(screen.getByRole("list", { name: "My queue" })).getAllByRole("listitem");
+    expect(within(rows[0]).queryByRole("button", { name: "Pull forward" })).toBeNull(); // none on the top row
+    expect(within(rows[1]).getByRole("button", { name: "Pull forward" })).toBeInTheDocument();
   });
 
   it("CQ-39: while a student is called the call control is replaced by the reason", async () => {

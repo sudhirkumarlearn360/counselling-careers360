@@ -149,8 +149,8 @@ export function CheckInFlow() {
             if (validate(detailsSchema, DETAILS_FIELDS)) setStep(2);
           }}
         >
-          <h1>Your details</h1>
-          <p className="muted">One short screen — it takes a minute.</p>
+          <h1 className="cform-title">Your details</h1>
+          <p className="cform-sub">One short screen — it takes a minute.</p>
           <Field label="Your name" htmlFor="name" error={err("name")}>
             <input id="name" className="input" autoComplete="name" aria-invalid={!!err("name")} {...register("name")} />
           </Field>
@@ -167,12 +167,12 @@ export function CheckInFlow() {
             <input id="email" className="input" type="email" inputMode="email" autoComplete="email" aria-invalid={!!err("email")} {...register("email")} />
           </Field>
           <Field label="Your stream" hint="The stream you pick decides which counsellor you're sent to." error={err("stream")}>
-            <div className="chips" role="group" aria-label="Stream">
+            <div className="streamgrid" role="group" aria-label="Stream">
               {STREAMS.map((s) => (
                 <button
                   type="button"
                   key={s.code}
-                  className="chip"
+                  className="streamchip"
                   aria-pressed={values.stream === s.code}
                   onClick={() => setValue("stream", s.code as never, { shouldValidate: false })}
                 >
@@ -190,15 +190,15 @@ export function CheckInFlow() {
             </select>
           </Field>
           <div className="row-actions">
-            <button className="btn cta" type="submit">Continue</button>
+            <button className="cta" type="submit">Continue</button>
           </div>
         </form>
       )}
 
       {step === 2 && (
         <form noValidate onSubmit={goals}>
-          <h1>What do you need help with?</h1>
-          <p className="muted">So your counsellor starts with your question, not your name.</p>
+          <h1 className="cform-title">What do you need help with?</h1>
+          <p className="cform-sub">So your counsellor starts with your question, not your name.</p>
           <Field label="Course or career you're aiming for" htmlFor="course" hint="“Not sure yet” is a perfectly good answer." error={err("course")}>
             <input id="course" className="input" aria-invalid={!!err("course")} {...register("course")} />
           </Field>
@@ -247,7 +247,7 @@ export function CheckInFlow() {
           {otpError && <div className="notice bad" role="alert">{otpError}</div>}
           <div className="row-actions">
             <button type="button" className="btn" onClick={() => setStep(1)}>← Back</button>
-            <button className="btn cta" type="submit" disabled={busy}>{busy ? "Sending code…" : "Send my code"}</button>
+            <button className="cta" type="submit" disabled={busy}>{busy ? "Sending code…" : "Send my code"}</button>
           </div>
         </form>
       )}
@@ -271,7 +271,7 @@ export function CheckInFlow() {
           )}
           <div className="row-actions">
             <button type="button" className="btn" onClick={() => { setCode(""); setStep(1); }}>← Change number</button>
-            <button className="btn cta" type="submit" disabled={busy || code.length !== 4}>{busy ? "Checking…" : "Get my token"}</button>
+            <button className="cta" type="submit" disabled={busy || code.length !== 4}>{busy ? "Checking…" : "Get my token"}</button>
           </div>
           <p style={{ textAlign: "center" }}>
             <button type="button" className="btn ghost sm" disabled={resendIn > 0 || busy} onClick={sendCode}>
