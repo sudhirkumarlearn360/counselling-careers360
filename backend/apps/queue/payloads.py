@@ -20,7 +20,14 @@ from apps.common.choices import (
 )
 from apps.counsellors.models import Duty, Posting
 from apps.messaging.models import Message
-from apps.queue.models import ACTIVE_STATUSES, OPEN_STATUSES, AuditEvent, Student, StudentStatus
+from apps.queue.models import (
+    ACTIVE_STATUSES,
+    OPEN_STATUSES,
+    AuditEvent,
+    SessionRecord,
+    Student,
+    StudentStatus,
+)
 from apps.queue.selectors import waiting_queue
 from apps.queue.services import metrics
 from apps.queue.services.checkin import _fmt_date
@@ -396,6 +403,9 @@ def desk_payload(counsellor, centre, now=None) -> dict:
             "in_queue": len(queue),
             "waiting_hall": hall_waiting,
             "counselled_today": metrics.counselled_today(counsellor, centre),
+            "ready_today": SessionRecord.objects.filter(
+                centre_id=centre.pk, counsellor_id=counsellor.pk, outcome="ready"
+            ).count(),
             "avg_session_min": round(avg.seconds / 60) if avg.n else None,
             "target_session_min": centre.settings.target_session_min,
             "late": sum(1 for s in queue if now - s.queue_at > sla),
@@ -434,6 +444,9 @@ def my_students(counsellor, centre_id=None) -> list:
                 "id": s.id,
                 "token": s.token,
                 "name": s.name,
+                "mobile": s.mobile,
+                "school": s.school,
+                "course": s.course,
                 "stream": s.stream,
                 "status": s.status,
                 "outcome": s.outcome,
@@ -458,7 +471,9 @@ def my_centres(counsellor) -> list:
                 "desk": p.desk_label,
                 "live": c.status == CentreStatus.LIVE and c.date == today,
                 "upcoming": c.date > today,
-                "students": Student.objects.filter(centre_id=c.pk, counsellor_id=counsellor.pk).count(),
+                "students": Student.objects.filter(centre_id=c.pk).count(),
+                "my_students": Student.objects.filter(centre_id=c.pk, counsellor_id=counsellor.pk).count(),
+                "counsellors_on_site": metrics.counsellors_on_site(c),
             }
         )
     return out

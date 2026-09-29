@@ -201,7 +201,8 @@ def test_cq50_a_counsellor_cannot_open_another_counsellors_student(client_as, de
     rows = c.get(f"{D}/my-students").json()["data"]
     assert [r["token"] for r in rows] == ["PCM-01"] and rows[0]["id"] == mine.id
     centres = c.get(f"{D}/my-centres").json()["data"]
-    assert centres[0]["live"] is True and centres[0]["desk"] == "Desk 1" and centres[0]["students"] == 1
+    assert centres[0]["live"] is True and centres[0]["desk"] == "Desk 1" and centres[0]["my_students"] == 1
+    assert centres[0]["students"] == 2 and centres[0]["counsellors_on_site"] == 1
 
 
 def test_cq5_ops_lead_works_a_desk_notes_are_authored_as_the_counsellor(client_as, desk, users):

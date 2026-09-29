@@ -61,7 +61,8 @@ def test_cq5_card_shows_serving_token_queue_length_and_open_desk_control(client_
         for x in client_as("ops_lead").get(URL).json()["data"][0]["counsellors"]
         if x["counsellor_id"] == counsellor.id
     )
-    assert card["serving"] == {"token": "PCM-01", "status": "in_session"}
+    assert card["serving"]["token"] == "PCM-01" and card["serving"]["status"] == "in_session"
+    assert card["serving"]["name"]
     assert card["queue_length"] == 2
     assert card["open_desk"] == {"as_counsellor": counsellor.id, "centre_id": centre.id}
 
@@ -113,3 +114,35 @@ def test_cq5_live_query_count_is_flat(
     client = client_as("ops_lead")
     with django_assert_max_num_queries(8):
         assert client.get(URL).status_code == 200
+
+
+def test_live_centre_summary_tiles_and_desk_card_details(client_as, centre, counsellor):
+    """The live view's tiles: checked in (self vs desk), waiting/late, counselled, no-shows, capacity."""
+    import datetime as dt
+
+    from django.utils import timezone
+
+    old = timezone.now() - dt.timedelta(minutes=45)
+    centre.expected_students = 20
+    centre.save()
+    a = student(centre, counsellor, "PCM-01", StudentStatus.WAITING, "9000000001")
+    a.queue_at = old
+    a.save()
+    student(centre, counsellor, "PCM-02", StudentStatus.DONE, "9000000002")
+    b = student(centre, counsellor, "PCM-03", StudentStatus.NO_SHOW, "9000000003")
+    b.source = "desk"
+    b.save()
+    data = client_as("ops_lead").get(URL).json()["data"][0]
+    assert data["summary"] == {
+        "checked_in": 3,
+        "self_scan": 2,
+        "at_desk": 1,
+        "waiting": 1,
+        "late": 1,
+        "counselled": 1,
+        "no_shows": 1,
+        "planned": 20,
+        "capacity_pct": 15,
+    }
+    card = data["counsellors"][0]
+    assert card["queue_length"] == 1 and card["queue_late"] == 1

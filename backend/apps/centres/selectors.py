@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch
 
 from apps.accounts.selectors import centre_payload
 from apps.centres.models import Centre
@@ -11,7 +11,7 @@ from apps.counsellors.models import Posting
 
 
 def centres_qs():
-    return Centre.objects.prefetch_related(
+    return Centre.objects.annotate(student_total=Count("students")).prefetch_related(
         Prefetch("postings", queryset=Posting.objects.select_related("counsellor")), "staff"
     )
 
@@ -35,6 +35,8 @@ def centre_full_payload(centre: Centre) -> dict:
         "covered_streams": covered,
         "uncovered_streams": uncovered,
         "counsellor_count": len(centre.postings.all()),
+        "counsellor_names": [p.counsellor.name for p in centre.postings.all()],
+        "student_count": getattr(centre, "student_total", 0),
         "front_desk_email": next((u.email for u in centre.staff.all()), ""),  # never the password
     }
 

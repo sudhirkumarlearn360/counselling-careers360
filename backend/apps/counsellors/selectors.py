@@ -25,8 +25,31 @@ def posting_payload(p: Posting) -> dict:
     }
 
 
-def counsellor_payload(c: Counsellor) -> dict:
+def counsellor_stats() -> dict:
+    """Done sessions, average session and 'ready to apply' per counsellor, from SessionRecord (2 queries)."""
+    from collections import defaultdict
+
+    from apps.queue.models import SessionRecord
+
+    done, secs, ready = defaultdict(int), defaultdict(float), defaultdict(int)
+    for r in SessionRecord.objects.values("counsellor_id", "started_at", "ended_at", "outcome"):
+        done[r["counsellor_id"]] += 1
+        secs[r["counsellor_id"]] += (r["ended_at"] - r["started_at"]).total_seconds()
+        ready[r["counsellor_id"]] += r["outcome"] == "ready"
     return {
+        cid: {
+            "done": n,
+            "avg_session_min": round(secs[cid] / n / 60) if n else None,
+            "ready_to_apply": ready[cid],
+        }
+        for cid, n in done.items()
+    }
+
+
+def counsellor_payload(c: Counsellor, stats: dict = None) -> dict:
+    stats = (stats or {}).get(c.id, {"done": 0, "avg_session_min": None, "ready_to_apply": 0})
+    return {
+        "stats": stats,
         "id": c.id,
         "name": c.name,
         "mobile": c.mobile,
@@ -37,7 +60,8 @@ def counsellor_payload(c: Counsellor) -> dict:
 
 
 def counsellor_list() -> list:
-    return [counsellor_payload(c) for c in counsellors_qs()]
+    stats = counsellor_stats()
+    return [counsellor_payload(c, stats) for c in counsellors_qs()]
 
 
 def counsellor_by_id(pk: int):
