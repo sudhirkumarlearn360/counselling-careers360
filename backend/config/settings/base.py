@@ -132,6 +132,8 @@ LOGIN_HELPDESK_AFTER_FAILURES = 3
 # --- Messaging (counselqueue-messaging) -----------------------------------
 MESSAGING_PROVIDER = os.getenv("MESSAGING_PROVIDER", "apps.messaging.providers.stub.StubProvider")
 MESSAGING_STUB_FAIL_TO = env_list("MESSAGING_STUB_FAIL_TO")
+# The student's live token link in messages is f"{FRONTEND_BASE_URL}/t/{access_key}" (CQ-26).
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173")
 
 # --- OTP (CQ-18) ----------------------------------------------------------
 OTP_TTL_MIN = env_int("OTP_TTL_MIN", 10)
