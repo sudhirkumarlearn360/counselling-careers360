@@ -41,6 +41,19 @@ def hall_student(request, student_id) -> Student:
     return s
 
 
+def pick_counsellor(raw) -> Counsellor:
+    """A counsellor chosen in the UI; anything unknown or malformed is a clear 400, never a 500."""
+    try:
+        counsellor = (
+            Counsellor.objects.filter(pk=int(raw)).first() if raw not in (None, "", True, False) else None
+        )
+    except (TypeError, ValueError):
+        counsellor = None
+    if counsellor is None:
+        raise ValidationError({"counsellor_id": "Pick a counsellor."})
+    return counsellor
+
+
 def _counsellor_id(request):
     raw = request.query_params.get("counsellor")
     if raw in (None, "", "all"):
@@ -66,9 +79,8 @@ class HallCheckInView(ApiView):
     def post(self, request, centre_id, **kwargs):
         centre = hall_centre(request, centre_id)
         data = validate_checkin(request.data, Source.DESK)
-        counsellor_id = request.data.get("counsellor_id")
-        if counsellor_id:
-            data["counsellor_id"] = counsellor_id
+        if request.data.get("counsellor_id") not in (None, ""):
+            data["counsellor_id"] = pick_counsellor(request.data.get("counsellor_id")).id
         student = check_in(
             centre, data, Source.DESK, actor=request.user, confirm=request.data.get("confirm") is True
         )
@@ -92,9 +104,7 @@ class HallStudentMoveView(ApiView):
 
     def post(self, request, student_id, **kwargs):
         s = hall_student(request, student_id)
-        target = Counsellor.objects.filter(pk=request.data.get("counsellor_id")).first()
-        if target is None:
-            raise ValidationError({"counsellor_id": "Pick a counsellor."})
+        target = pick_counsellor(request.data.get("counsellor_id"))
         move(s, target, actor=request.user, confirm=request.data.get("confirm") is True)
         return Response({"data": payloads.hall_student_detail(hall_student(request, student_id))})
 

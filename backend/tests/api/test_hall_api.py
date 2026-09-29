@@ -200,3 +200,30 @@ def test_student_record_has_audit_trail_and_messages(client_as, hall):
     call_next(meera, centre=centre)
     d = client_as("reception").get(f"{H}/students/{s.id}").json()["data"]
     assert [e["verb"] for e in d["audit"]] == ["called"] and d["messages"][0]["template"] == "turn_called"
+
+
+def test_hall_check_in_with_an_unknown_or_bad_counsellor_id_is_a_clear_400_not_a_500(client_as, hall):
+    centre, _, _ = hall
+    c = client_as("reception")
+    for bad in (99999, "abc", -1):
+        r = c.post(f"{H}/centres/{centre.id}/check-in", desk_form(counsellor_id=bad), format="json")
+        assert r.status_code == 400, (bad, r.content)
+        assert r.json()["data"]["fields"]["counsellor_id"] == "Pick a counsellor."
+
+
+def test_hall_move_with_an_unknown_or_bad_counsellor_id_is_a_clear_400(client_as, hall):
+    centre, meera, _ = hall
+    s = raw_student(centre, meera, "PCM-02")
+    for bad in (99999, "abc", None):
+        r = client_as("reception").post(f"{H}/students/{s.id}/move", {"counsellor_id": bad}, format="json")
+        assert r.status_code == 400 and r.json()["data"]["fields"]["counsellor_id"] == "Pick a counsellor."
+
+
+def test_cq29_a_manual_pick_must_be_on_desk(client_as, hall):
+    centre, meera, rahul = hall  # Rahul is off duty
+    r = client_as("reception").post(
+        f"{H}/centres/{centre.id}/check-in", desk_form(stream="COM", counsellor_id=rahul.id), format="json"
+    )
+    assert r.status_code == 400 and r.json()["code"] == "counsellor_not_on_desk"
+    assert r.json()["message"] == "Rahul Sen isn't on desk right now."
+    assert not Student.objects.exists()

@@ -48,6 +48,10 @@ class NoCounsellorForStream(QueueError):
 # --- Desk actions (CQ-39..49) ---------------------------------------------------------------------
 
 
+class CounsellorNotOnDesk(QueueError):
+    code = "counsellor_not_on_desk"
+
+
 class QueueEmpty(QueueError):
     code = "queue_empty"
     message = "Your queue is clear — new check-ins land here as students scan in."

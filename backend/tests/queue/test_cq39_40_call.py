@@ -161,3 +161,17 @@ def test_cq39_call_next_uses_current_live_posting_by_default(hall):
     centre, meera, _ = hall
     s = raw_student(centre, meera, "PCM-01")
     assert call_next(meera).student == s
+
+
+def test_cq40_cross_desk_call_locks_both_desks_in_id_order(hall):
+    """Rule: desk-level decisions lock postings (by id) before the student — including the desk it leaves."""
+    from unittest import mock
+
+    from apps.queue.services import transitions
+
+    centre, meera, ravi = hall
+    raw_student(centre, ravi, "COM-01", stream="COM")
+    with mock.patch.object(transitions, "lock_postings", wraps=transitions.lock_postings) as spy:
+        call_token(meera, "COM-01", centre=centre)
+    locked = {cid for call in spy.call_args_list for cid in call.args[1]}
+    assert {meera.id, ravi.id} <= locked

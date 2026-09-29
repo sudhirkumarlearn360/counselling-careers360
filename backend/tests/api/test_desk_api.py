@@ -223,3 +223,24 @@ def test_cq5_a_counsellor_cannot_open_anothers_desk_and_reception_is_blocked(cli
     assert client_as("counsellor").get(f"{D}/queue?as_counsellor={rahul.id}").status_code == 403
     assert client_as("reception").get(f"{D}/queue").status_code == 403
     assert client_as("anonymous").get(f"{D}/queue").status_code == 401
+
+
+def test_cq20_editing_a_mobile_cannot_create_a_second_open_token_for_the_same_number(client_as, desk):
+    centre, meera, _ = desk
+    raw_student(centre, meera, "PCM-01", mobile="9811022001")
+    other = raw_student(centre, meera, "PCM-02", mobile="9811022002")
+    r = client_as("counsellor").patch(
+        f"{D}/students/{other.id}", {"mobile": "+91 98110 22001"}, format="json"
+    )
+    assert r.status_code == 409
+    assert r.json()["message"] == "A token is already open for this number — PCM-01."
+    other.refresh_from_db()
+    assert other.mobile == "9811022002"
+    # an unchanged mobile, or one whose token is finished, is fine
+    ok = client_as("counsellor").patch(
+        f"{D}/students/{other.id}", {"mobile": "9811022002", "budget": "4-8 L"}, format="json"
+    )
+    assert ok.status_code == 200
+    raw_student(centre, meera, "PCM-03", mobile="9811022003", status="done")
+    free = client_as("counsellor").patch(f"{D}/students/{other.id}", {"mobile": "9811022003"}, format="json")
+    assert free.status_code == 200

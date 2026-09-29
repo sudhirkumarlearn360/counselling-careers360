@@ -146,10 +146,12 @@ def call_token(counsellor, raw_token, centre=None, actor=None, on_behalf_of=None
         lock_sequence(centre.pk)
         lock_desk(centre.pk, counsellor)
         _busy_guard(counsellor, centre.pk)
-        found = Student.objects.filter(centre_id=centre.pk, token=token).values_list("pk", flat=True).first()
+        found = Student.objects.filter(centre_id=centre.pk, token=token).values("pk", "counsellor_id").first()
         if found is None:
             raise TokenNotFound(f"No token {token} at this centre today.")
-        student = lock_student(found)
+        # Desk-level decisions lock postings (by id) before the student, including the desk it leaves.
+        lock_postings(centre.pk, [counsellor.id, found["counsellor_id"]])
+        student = lock_student(found["pk"])
         status = student.status
         if status == StudentStatus.DONE:
             at = timezone.localtime(student.ended_at) if student.ended_at else None

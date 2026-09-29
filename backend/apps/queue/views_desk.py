@@ -16,7 +16,8 @@ from apps.common.views import ApiView
 from apps.counsellors.services import current_live_posting
 from apps.messaging.services import ResendRefused, resend_message, send_template
 from apps.queue import payloads
-from apps.queue.models import AuditEvent, Note, Student
+from apps.queue.exceptions import DuplicateToken
+from apps.queue.models import OPEN_STATUSES, AuditEvent, Note, Student
 from apps.queue.services import (
     call_next,
     call_token,
@@ -27,6 +28,7 @@ from apps.queue.services import (
     start_session,
 )
 from apps.queue.services.audit import record
+from apps.queue.services.locks import lock_sequence
 from apps.queue.validation import validate_student_edit
 
 DeskPermission = RoleIn(Role.COUNSELLOR, Role.OPS_LEAD)
@@ -98,6 +100,18 @@ class DeskStudentView(DeskView):
         s = self.student(student_id)
         changes = validate_student_edit(request.data, timezone.localdate())
         with transaction.atomic():
+            lock_sequence(s.centre_id)  # the same per-centre lock check-in takes: no duplicate can slip in
+            if changes.get("mobile") and changes["mobile"] != s.mobile:
+                dup = (
+                    Student.objects.filter(
+                        centre_id=s.centre_id, mobile=changes["mobile"], status__in=OPEN_STATUSES
+                    )
+                    .exclude(pk=s.pk)
+                    .order_by("id")
+                    .first()
+                )
+                if dup is not None:
+                    raise DuplicateToken(dup)
             s = Student.objects.select_for_update().get(pk=s.pk)
             for key, value in changes.items():
                 setattr(s, key, value)

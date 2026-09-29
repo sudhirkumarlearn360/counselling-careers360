@@ -9,9 +9,9 @@ from apps.centres.models import Centre, CentreStatus
 from apps.common.choices import Stream
 from apps.common.exceptions import NeedsConfirmation
 from apps.common.validators import normalise_mobile
-from apps.counsellors.models import Counsellor
+from apps.counsellors.models import Counsellor, Duty
 from apps.messaging.services import send_template
-from apps.queue.exceptions import CentreNotLive, DuplicateToken
+from apps.queue.exceptions import CentreNotLive, CounsellorNotOnDesk, DuplicateToken
 from apps.queue.models import OPEN_STATUSES, AuditEvent, Consent, Source, Student
 from apps.queue.services.assignment import assign_counsellor
 from apps.queue.services.audit import record
@@ -51,6 +51,8 @@ def _manual_desk(centre, counsellor_id, stream: str, confirm: bool):
     """Reception picks the counsellor (CQ-29 after NoCounsellorFor*), with the stream warning."""
     counsellor = Counsellor.objects.get(pk=counsellor_id)
     posting = lock_desk(centre.pk, counsellor)
+    if posting.duty != Duty.ON_DESK:  # a student must never be sent to an empty chair (CQ-37)
+        raise CounsellorNotOnDesk(f"{counsellor.name} isn't on desk right now.")
     if not counsellor.covers(stream) and not confirm:
         raise NeedsConfirmation(stream_warning(counsellor, stream), data={"counsellor_id": counsellor.id})
     return posting

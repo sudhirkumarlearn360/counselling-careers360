@@ -4,6 +4,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 from config.settings.database import mysql_alias
@@ -140,6 +141,8 @@ OTP_TTL_MIN = env_int("OTP_TTL_MIN", 10)
 OTP_RESEND_SEC = env_int("OTP_RESEND_SEC", 30)
 OTP_MAX_ATTEMPTS = env_int("OTP_MAX_ATTEMPTS", 5)
 OTP_STUB_CODE = os.getenv("OTP_STUB_CODE", "")
+if OTP_STUB_CODE and not DEBUG:  # a fixed code would let anyone verify any number
+    raise ImproperlyConfigured("OTP_STUB_CODE must be empty unless DEBUG is on.")
 
 # --- seed_demo (non-DEBUG passwords come only from env) -------------------
 SEED_ADMIN_PASSWORD = os.getenv("SEED_ADMIN_PASSWORD", "")
