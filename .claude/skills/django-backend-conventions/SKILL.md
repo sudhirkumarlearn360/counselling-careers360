@@ -6,7 +6,10 @@ description: How the CounselQueue backend is built — Django 4.2 LTS + DRF + My
 # Backend conventions (`backend/`)
 
 ## Stack (pin in `requirements.txt`)
-`Django>=4.2,<4.3`, `djangorestframework`, `djangorestframework-simplejwt`, `mysqlclient`, `django-environ`, `django-cors-headers`; dev: `pytest`, `pytest-django`, `factory-boy`, `freezegun`, `ruff`. Python 3.11+.
+`Django>=4.2,<4.3`, `djangorestframework`, `djangorestframework-simplejwt`, `mysqlclient`, `django-environ`, `django-cors-headers`; dev: `pytest`, `pytest-django`, `factory-boy`, `freezegun`, `ruff`.
+
+**Python 3.9.6** (pinned, the system `/usr/bin/python3`). The virtualenv is `backend/.venv` (already created with the deps installed). Always run `.venv/bin/python`, `.venv/bin/pytest` and `.venv/bin/ruff` from `backend/`. Resolved pins: Django 4.2.30, djangorestframework 3.16.1, djangorestframework-simplejwt 5.5.1, mysqlclient 2.2.7, django-environ 0.14, django-cors-headers 4.9, pytest 8.4, pytest-django 4.11, factory_boy 3.3, freezegun 1.5, ruff 0.16 (`target-version = "py39"`).
+Python 3.9 rules: put `from __future__ import annotations` at the top of every module that uses `X | Y` hints or builtin generics in annotations. No `match`, no `zip(strict=)`, no parenthesised multi-item `with`, no `typing.Self`/`TypeAlias`, no `dataclass(slots=True, kw_only=True)`.
 
 ## Layout
 ```

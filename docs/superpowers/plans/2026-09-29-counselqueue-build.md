@@ -11,7 +11,7 @@
 **Spec:** `prd_doc.md`. The detailed, binding rules are in the project skills (`.claude/skills/*`): domain, queue-engine, messaging, ui-spec, and the backend/frontend conventions. **Ruling:** this plan does not inline code. The skills are the spec-level code guidance, and each implementer writes tests from the ACs first (TDD). Inlining 61 stories of code would duplicate the skills and drift from them.
 
 ## Global Constraints
-- Django `>=4.2,<4.3`; React `"^18.2.0"` (never 19); Python 3.12; **Node 18.20.3** (`frontend/.nvmrc`; run npm with `export PATH="$HOME/.nvm/versions/node/v18.20.3/bin:$PATH"`); MySQL 9 local (`backend/.env` → `DATABASE_URL`, already created; the test DB is `test_counselqueue`).
+- Django `>=4.2,<4.3`; React `"^18.2.0"` (never 19); **Python 3.9.6** (`backend/.venv`, deps installed; use `.venv/bin/…`; py39 syntax only); **Node 18.20.3** (`frontend/.nvmrc`; run npm with `export PATH="$HOME/.nvm/versions/node/v18.20.3/bin:$PATH"`); MySQL 9 local (`backend/.env` → `DATABASE_URL`, already created; the test DB is `test_counselqueue`).
 - Exact copy from `counselqueue-ui-spec` / `counselqueue-messaging`. Status changes only via `apps/queue/services`.
 - Every AC gets a test: `test_cq<id>_*` (backend) or `it("CQ-<id> …")` (frontend).
 - Commit per story group. **Backend agents `git add backend/` only; frontend agents `git add frontend/` only** (they run in parallel in one working tree). If a commit hits `index.lock`, retry after 2s.
