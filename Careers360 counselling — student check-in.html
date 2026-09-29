@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Careers360 counselling — check in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12356B; --blue:#2B6CB8; --sky:#E9F1FB; --paper:#F4F8FD; --card:#FFFFFF;
+  --amber:#D98A16; --amber-soft:#FBEFD9; --rose:#B3261E; --rose-soft:#FBE7E5;
+  --ink:#0F1F35; --muted:#5A6D85; --line:#DCE6F2; --line-strong:#BFD0E4;
+  --ok:#12795C; --ok-soft:#DDF1EA;
+  --r-s:6px; --r-m:12px; --r-l:20px;
+  --sans:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --shadow:0 1px 2px rgba(18,43,39,.06),0 8px 24px -16px rgba(18,43,39,.35);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root:not([data-theme="light"]){ }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --navy:#8FB8EC; --blue:#A8CBF3; --sky:#16273D; --paper:#0A1626; --card:#122238;
+    --ink:#E6EEF8; --muted:#9AAEC6; --line:#22354F; --line-strong:#33496A;
+    --amber-soft:#3A2D10; --rose-soft:#3B1B18; --ok-soft:#0F2E26;
+  }
+}
+:root[data-theme="dark"]{
+  --navy:#8FB8EC; --blue:#A8CBF3; --sky:#16273D; --paper:#0A1626; --card:#122238;
+  --ink:#E6EEF8; --muted:#9AAEC6; --line:#22354F; --line-strong:#33496A;
+  --amber-soft:#3A2D10; --rose-soft:#3B1B18; --ok-soft:#0F2E26;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px); -webkit-text-size-adjust:100%}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+.hide{display:none!important}
+
+/* ---------- demo harness ---------- */
+#harness{position:sticky;top:0;z-index:60;display:flex;gap:6px;align-items:center;flex-wrap:wrap;
+  padding:8px 14px;background:var(--navy);color:#F2F7FE}
+:root[data-theme="dark"] #harness, :root:not([data-theme="light"]) #harness{color:#0A1626}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #harness{background:var(--navy);color:#0A1626}}
+#harness .brand{font-family:var(--serif);font-size:19px;letter-spacing:.2px;margin-right:10px;white-space:nowrap}
+#harness .brand em{font-style:italic;opacity:.85}
+.rolebtn{padding:5px 11px;border-radius:999px;font-size:13px;font-weight:500;opacity:.72;border:1px solid transparent}
+.rolebtn[aria-current="true"]{background:rgba(255,255,255,.16);opacity:1;border-color:rgba(255,255,255,.28)}
+#harness .spacer{flex:1}
+.hbtn{font-size:12.5px;padding:5px 10px;border:1px solid rgba(255,255,255,.3);border-radius:999px;opacity:.85}
+.clock{font-size:12.5px;font-variant-numeric:tabular-nums;opacity:.8;padding-right:4px}
+
+/* ---------- layout ---------- */
+.screen{min-height:calc(100vh - 46px)}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:calc(100vh - 46px)}
+.rail{background:var(--card);border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:2px}
+.rail .who{padding:6px 10px 14px}
+.rail .who b{display:block;font-size:15px}
+.rail .who span{font-size:12.5px;color:var(--muted)}
+.navitem{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;font-size:14px;color:var(--muted);text-align:left;width:100%}
+.navitem b{font-weight:500}
+.navitem[aria-current="true"]{background:var(--sky);color:var(--ink)}
+.navitem .cnt{margin-left:auto;font-size:12px;background:var(--line);padding:1px 7px;border-radius:999px;font-variant-numeric:tabular-nums}
+.navitem[aria-current="true"] .cnt{background:var(--card)}
+.main{padding:22px 26px 60px;max-width:1180px}
+.pagehead{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.pagehead h1{font-family:var(--serif);font-weight:400;font-size:30px;margin:0;line-height:1.1}
+.pagehead p{margin:4px 0 0;color:var(--muted);font-size:13.5px;max-width:62ch}
+.pagehead .right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ---------- primitives ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:16px}
+.card h3{margin:0 0 10px;font-size:14px;font-weight:600;letter-spacing:.1px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 15px;border-radius:9px;
+  background:var(--navy);color:#FFFFFF;font-weight:500;font-size:14px;border:1px solid var(--navy)}
+:root[data-theme="dark"] .btn{color:#0A1626}
+.btn:hover{background:var(--blue);border-color:var(--blue)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+:root[data-theme="dark"] .btn.ghost,:root[data-theme="dark"] .btn.danger{color:var(--ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn{color:#0A1626}
+  :root:not([data-theme="light"]) .btn.ghost,:root:not([data-theme="light"]) .btn.danger{color:var(--ink)}
+  :root:not([data-theme="light"]) .segbtn[aria-current="true"]{color:#0A1626}}
+.btn.ghost:hover{background:var(--sky);border-color:var(--line-strong)}
+.btn.warn{background:var(--amber);border-color:var(--amber);color:#4A3204}
+.btn.danger{background:transparent;color:var(--rose);border-color:var(--rose)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:8px}
+.btn.big{padding:14px 22px;font-size:16px;border-radius:12px;width:100%}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:500;
+  background:var(--sky);color:var(--ink);border:1px solid transparent}
+.pill.amber{background:var(--amber-soft);color:#8A5A0B}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.rose{background:var(--rose-soft);color:var(--rose)}
+.pill.grey{background:var(--line);color:var(--muted)}
+:root[data-theme="dark"] .pill.amber{color:var(--amber)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:14px 16px}
+.stat .n{font-family:var(--serif);font-size:32px;line-height:1;font-variant-numeric:tabular-nums}
+.stat .l{font-size:12.5px;color:var(--muted);margin-top:6px}
+.stat .d{font-size:12px;margin-top:4px}
+label.f{display:block;margin-bottom:12px}
+label.f>span{display:block;font-size:13px;font-weight:500;margin-bottom:5px}
+label.f>small{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+input[type=text],input[type=tel],input[type=email],input[type=password],input[type=date],input[type=time],input[type=number],select,textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--line-strong);border-radius:9px;background:var(--card)}
+textarea{min-height:76px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--blue);outline-offset:0;border-color:var(--blue)}
+.err{color:var(--rose);font-size:12.5px;margin-top:4px;display:block}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-weight:600;font-size:12.5px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--r-m)}
+.tok{font-family:var(--serif);font-size:17px;letter-spacing:.4px;font-variant-numeric:tabular-nums}
+.segment{display:flex;gap:4px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;padding:4px;margin-bottom:16px}
+.segbtn{display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:9px;font-size:13.5px;color:var(--muted);font-weight:500}
+.segbtn:hover{background:var(--sky)}
+.segbtn[aria-current="true"]{background:var(--navy);color:#FFF}
+:root[data-theme="dark"] .segbtn[aria-current="true"]{color:#0A1626}
+.segbtn .c{font-size:12px;background:var(--line);color:var(--ink);padding:1px 7px;border-radius:999px;font-variant-numeric:tabular-nums}
+.segbtn[aria-current="true"] .c{background:rgba(255,255,255,.22);color:inherit}
+.segbtn .sm{font-size:11.5px;opacity:.8;font-weight:400}
+.searchrow{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.searchrow input{max-width:360px}
+.empty{text-align:center;padding:34px 18px;color:var(--muted);font-size:13.5px}
+.empty b{display:block;color:var(--ink);font-size:15px;font-weight:500;margin-bottom:5px}
+.rowsplit{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.muted{color:var(--muted)}
+.sep{height:1px;background:var(--line);margin:14px 0}
+
+/* ---------- queue cards ---------- */
+.qitem{display:flex;gap:12px;align-items:center;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--card);margin-bottom:8px}
+.qitem.next{border-color:var(--amber);background:var(--amber-soft)}
+.qitem.late{border-color:var(--rose)}
+.qitem .num{font-family:var(--serif);font-size:20px;min-width:74px;font-variant-numeric:tabular-nums}
+.qitem .nm{font-weight:500}
+.qitem .meta{font-size:12.5px;color:var(--muted)}
+.qitem .act{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+
+/* ---------- student phone ---------- */
+.phonewrap{display:flex;justify-content:center;padding:26px 14px 60px;background:
+  radial-gradient(1200px 400px at 50% -80px, var(--sky), transparent 70%)}
+.phone{width:100%;max-width:412px;background:var(--card);border:1px solid var(--line);border-radius:26px;
+  box-shadow:var(--shadow);overflow:hidden}
+.phone .bar{background:var(--navy);color:#EDF4FF;padding:12px 18px;display:flex;align-items:center;gap:8px;font-size:13px}
+:root[data-theme="dark"] .phone .bar{color:#0A1626}
+.phone .body{padding:20px 18px 26px}
+.phone h2{font-family:var(--serif);font-weight:400;font-size:26px;margin:0 0 6px;line-height:1.15}
+.phone p.lede{margin:0 0 18px;color:var(--muted);font-size:14px}
+.ticket{border:1px solid var(--line-strong);border-radius:var(--r-l);overflow:hidden;background:var(--card)}
+.ticket .top{padding:22px 18px 18px;text-align:center;background:var(--sky)}
+.ticket .top .lbl{font-size:12.5px;color:var(--muted)}
+.ticket .top .big{font-family:var(--serif);font-size:58px;line-height:1;margin-top:4px;font-variant-numeric:tabular-nums}
+.perf{height:0;border-top:2px dashed var(--line-strong);position:relative}
+.perf::before,.perf::after{content:"";position:absolute;top:-9px;width:18px;height:18px;border-radius:50%;background:var(--paper)}
+.perf::before{left:-9px} .perf::after{right:-9px}
+.ticket .bot{padding:16px 18px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:14px;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:none}
+.kv span{color:var(--muted)}
+.kv b{font-weight:500;text-align:right}
+.qr{width:150px;height:150px;margin:0 auto;display:block}
+.stepdots{display:flex;gap:6px;margin-bottom:16px}
+.stepdots i{height:3px;flex:1;background:var(--line);border-radius:2px}
+.stepdots i.on{background:var(--navy)}
+.notice{background:var(--amber-soft);border:1px solid var(--amber);border-radius:var(--r-m);padding:13px 14px;font-size:13.5px;margin-bottom:14px}
+.notice b{display:block;margin-bottom:3px}
+.wa{background:var(--ok-soft);border:1px solid var(--ok);border-radius:var(--r-m);padding:13px 14px;font-size:13.5px}
+
+/* ---------- board ---------- */
+.board{background:var(--navy);color:#EEF4FD;min-height:calc(100vh - 46px);padding:26px 30px}
+.board h1{font-family:var(--serif);font-weight:400;font-size:26px;margin:0}
+.board .sub{opacity:.72;font-size:13.5px}
+.deskgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-top:22px}
+.desk{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:var(--r-m);padding:16px}
+.desk .who{font-size:13.5px;opacity:.78}
+.desk .serving{font-family:var(--serif);font-size:46px;line-height:1.05;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.desk .nxt{font-size:12.5px;opacity:.7}
+.desk.idle .serving{opacity:.35}
+.board .ticker{margin-top:24px;border-top:1px solid rgba(255,255,255,.18);padding-top:14px;font-size:13.5px;opacity:.85}
+
+/* ---------- modal + toast ---------- */
+.modalbg{position:fixed;inset:0;background:rgba(12,30,27,.5);display:flex;align-items:center;justify-content:center;z-index:80;padding:18px}
+.modal{background:var(--card);border-radius:var(--r-l);max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:22px;box-shadow:var(--shadow)}
+.modal h2{font-family:var(--serif);font-weight:400;font-size:24px;margin:0 0 4px}
+.modal .sub{color:var(--muted);font-size:13.5px;margin-bottom:16px}
+.modalfoot{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+#toasts{position:fixed;right:16px;bottom:16px;z-index:90;display:flex;flex-direction:column;gap:8px;max-width:340px}
+.toast{background:var(--ink);color:#FFFFFF;padding:11px 14px;border-radius:10px;font-size:13.5px;box-shadow:var(--shadow)}
+.toast.ok{background:var(--ok)} .toast.warn{background:var(--amber);color:#4A3204} .toast.bad{background:var(--rose);color:#FFF}
+@media(max-width:820px){
+  .app{grid-template-columns:1fr}
+  .rail{flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line);padding:10px}
+  .rail .who{display:none}
+  .navitem{width:auto;white-space:nowrap}
+  .main{padding:16px 14px 50px}
+}
+</style>
+<style>
+/* ── Careers360 brand ───────────────────────────────────────── */
+:root{
+  /* Careers360 brand — softened for student-facing UI */
+  --c360-red:#C0392B;   --c360-red-d:#992D22;
+  --c360-rose:#E85D4A;  /* lighter warm red for accents */
+  --c360-gold:#F39C12;  --c360-gold-lt:#F8C76A;
+  --c360-peach:#FF7F5C; /* mid-point in the gradient */
+  --c360-cream:#FFFBF8; --c360-warm:#FFF3EF;
+  --c360-step-line:#F5C6BE; --c360-sel-bg:#FFF0EC;
+  --c360-text-on-grad:#fff;
+}
+
+/* ── topbar ─────────────────────────────────────────────────── */
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 18px;background:linear-gradient(90deg,#B03020 0%,#C0392B 40%,#D4500E 100%);color:#FFF}
+.topbar .brand{font-family:var(--serif);font-size:19px}
+.topbar .brand em{font-style:italic;opacity:.85}
+.topbar .spacer{flex:1}
+.topbar .hbtn{font-size:12px;padding:4px 10px;border:1px solid rgba(255,255,255,.4);border-radius:999px;color:#fff;opacity:.9}
+
+/* ── LANDING — full screen split ─────────────────────────────── */
+.landing{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 44px)}
+@media(max-width:780px){.landing{grid-template-columns:1fr}}
+
+/* left panel */
+.land-left{
+  /* 5-stop gradient: deep burgundy → warm rose → peach → gold */
+  background:linear-gradient(155deg,#9B2335 0%,#C0392B 25%,#E85D3A 52%,#F08030 75%,#F5A623 100%);
+  color:#fff;padding:40px 44px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+
+/* layered overlay: soft light bloom top-right + dark vignette bottom-left */
+.land-left::before{
+  content:"";position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 55% at 90% 10%,rgba(255,255,255,.18) 0%,transparent 70%),
+    radial-gradient(ellipse 55% 45% at 5%  90%,rgba(80,10,5,.25)    0%,transparent 65%),
+    radial-gradient(ellipse 40% 30% at 50% 50%,rgba(255,200,80,.08)  0%,transparent 100%)}
+
+/* decorative SVG shapes */
+.land-left::after{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    /* large blurred circle top-right */
+    radial-gradient(circle 180px at 88% 12%,rgba(255,255,255,.11) 0%,transparent 100%),
+    /* small crisp ring mid-left */
+    radial-gradient(circle 60px  at 8%  48%,transparent 46px,rgba(255,255,255,.14) 46px,rgba(255,255,255,.14) 50px,transparent 50px),
+    /* tiny dot cluster */
+    radial-gradient(circle 4px at 75% 72%,rgba(255,255,255,.35) 0%,transparent 100%),
+    radial-gradient(circle 3px at 82% 80%,rgba(255,255,255,.25) 0%,transparent 100%),
+    radial-gradient(circle 5px at 68% 88%,rgba(255,255,255,.20) 0%,transparent 100%),
+    radial-gradient(circle 6px at 15% 20%,rgba(255,255,255,.18) 0%,transparent 100%),
+    radial-gradient(circle 3px at 22% 30%,rgba(255,255,255,.22) 0%,transparent 100%)}
+
+.land-left>*{position:relative;z-index:1}
+.land-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.2);
+  backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  padding:5px 13px 5px 9px;font-size:12.5px;font-weight:600;letter-spacing:.3px;margin-bottom:22px}
+.land-badge .dot{width:8px;height:8px;background:#4ADE80;border-radius:50%;flex-shrink:0;
+  box-shadow:0 0 0 3px rgba(74,222,128,.3)}
+.land-h1{font-family:var(--serif);font-size:clamp(28px,4vw,42px);line-height:1.1;font-weight:400;margin:0 0 14px}
+.land-h1 em{font-style:italic;color:var(--c360-gold)}
+.land-sub{font-size:15px;opacity:.88;line-height:1.6;max-width:44ch;margin:0 0 32px}
+.land-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:36px}
+.land-pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
+  border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:500}
+.land-stats{display:flex;gap:20px}
+.land-stat .n{font-family:var(--serif);font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+.land-stat .l{font-size:11.5px;opacity:.78;margin-top:2px}
+.land-divider{width:1px;background:rgba(255,255,255,.25);align-self:stretch}
+.land-quote{margin-top:32px;padding-top:20px;border-top:1px solid rgba(255,255,255,.22);
+  font-size:13px;opacity:.8;line-height:1.55;font-style:italic}
+
+/* right panel */
+.land-right{
+  background:linear-gradient(170deg,#FFF2EE 0%,#FFFAF8 30%,#FFFFFF 65%);
+  display:flex;align-items:center;justify-content:center;padding:36px 40px;position:relative;overflow:hidden}
+.land-right::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(circle 260px at -5%  -5%, rgba(192,57,43,.09) 0%,transparent 100%),
+    radial-gradient(circle 200px at 106% 106%,rgba(243,156,18,.10) 0%,transparent 100%),
+    radial-gradient(circle 120px at 100%  0%,  rgba(232,93,58,.07)  0%,transparent 100%)}
+/* dotted grid pattern */
+.land-right::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(circle,rgba(192,57,43,.12) 1px,transparent 1px);
+  background-size:24px 24px;mask-image:radial-gradient(ellipse 80% 70% at 50% 50%,transparent 40%,black 100%)}
+@media(max-width:780px){.land-left{padding:32px 24px}.land-right{padding:28px 18px}}
+.land-box{width:100%;max-width:400px}
+.land-qr-wrap{display:flex;gap:16px;align-items:flex-start;background:#fff;border:2px dashed rgba(192,57,43,.25);
+  border-radius:16px;padding:16px;margin-bottom:20px}
+.land-qr-wrap svg{flex-shrink:0;border-radius:8px}
+.land-qr-info{flex:1}
+.land-qr-info .qt{font-size:13px;font-weight:700;color:#C0392B;margin-bottom:4px}
+.land-qr-info .qd{font-size:12px;color:var(--muted);line-height:1.5}
+.land-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12.5px;margin:14px 0}
+.land-or::before,.land-or::after{content:"";flex:1;height:1px;background:var(--c360-step-line)}
+
+/* ── compact form on right panel ─────────────────────────────── */
+.cform-title{font-family:var(--serif);font-size:22px;font-weight:400;color:#C0392B;margin:0 0 4px}
+.cform-sub{font-size:13px;color:var(--muted);margin:0 0 18px}
+.cform label.f span{font-size:13px;font-weight:600;color:#333}
+.cform input[type=text],.cform input[type=tel]{
+  border:1.5px solid #F0D8D2;border-radius:10px;background:#fff;font-size:14px;padding:10px 12px}
+.cform input:focus{border-color:#C0392B;outline:2px solid rgba(204,0,0,.15);outline-offset:0}
+.cform .phonewrap-in{display:flex;gap:8px;align-items:center}
+.cform .phonewrap-in .pre{font-size:14px;font-weight:600;color:#444;padding:10px 0;white-space:nowrap}
+.cform .phonewrap-in input{flex:1}
+.cform .stream-sect{margin-top:2px}
+.cform .stream-sect>label{font-size:13px;font-weight:600;color:#333;display:block;margin-bottom:6px}
+.cform .stream-hint{font-size:11.5px;color:var(--muted);margin-bottom:8px;display:block}
+/* stream chips inside cform */
+.streamgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.streamchip{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1.5px solid #F0D8D2;
+  border-radius:10px;cursor:pointer;font-size:12.5px;background:#fff;transition:all .15s;line-height:1.3}
+.streamchip:hover{border-color:#C0392B;background:var(--c360-sel-bg)}
+.streamchip input[type=radio]{width:auto;flex:0 0 auto;accent-color:#C0392B}
+.streamchip.sel{border-color:#C0392B;background:var(--c360-sel-bg);font-weight:600;color:#C0392B}
+.cform-submit{width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-size:15px;font-weight:700;
+  background:linear-gradient(120deg,#C0392B 0%,#E85D3A 55%,#F39C12 100%);color:#fff;margin-top:18px;
+  letter-spacing:.3px;box-shadow:0 4px 18px rgba(192,57,43,.28);transition:transform .12s,box-shadow .12s}
+.cform-submit:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(192,57,43,.36)}
+.cform-submit:active{transform:translateY(0)}
+.err{color:#C0392B;font-size:12.5px;margin-top:4px;display:block}
+.land-foot{font-size:11px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5}
+
+/* ── phone shell (verify + ticket screens only) ───────────────── */
+.phonewrap{display:flex;justify-content:center;padding:26px 14px 60px;
+  background:linear-gradient(160deg,var(--c360-cream) 0%,#fff 100%)}
+.phone{width:100%;max-width:412px;background:var(--card);border:1px solid var(--line);border-radius:26px;
+  box-shadow:0 2px 4px rgba(0,0,0,.06),0 16px 40px rgba(204,0,0,.08);overflow:hidden}
+.phone .bar{background:#C0392B;color:#FFF;padding:12px 18px;display:flex;align-items:center;gap:8px;font-size:13px}
+.phone .body{padding:20px 18px 26px}
+.phone h2{font-family:var(--serif);font-weight:400;font-size:26px;margin:0 0 6px;line-height:1.15}
+.phone p.lede{margin:0 0 18px;color:var(--muted);font-size:14px}
+
+/* ── ticket ────────────────────────────────────────────────────── */
+.bignum{font-family:var(--serif);font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.notice{background:var(--amber-soft);border:1px solid var(--amber);border-radius:var(--r-m);padding:13px 14px;font-size:13.5px;margin-bottom:14px}
+.notice b{display:block;margin-bottom:3px}
+.wa{background:var(--ok-soft);border:1px solid var(--ok);border-radius:var(--r-m);padding:13px 14px;font-size:13.5px}
+.ticket{border:2px solid var(--c360-step-line);border-radius:var(--r-l);overflow:hidden;background:var(--card)}
+.ticket .top{padding:22px 18px 18px;text-align:center;background:var(--c360-sel-bg)}
+.ticket .top .lbl{font-size:12.5px;color:var(--muted)}
+.ticket .top .big{font-family:var(--serif);font-size:58px;line-height:1;margin-top:4px;font-variant-numeric:tabular-nums;color:#C0392B}
+.perf{height:0;border-top:2px dashed var(--c360-step-line);position:relative}
+.perf::before,.perf::after{content:"";position:absolute;top:-9px;width:18px;height:18px;border-radius:50%;background:var(--paper)}
+.perf::before{left:-9px}.perf::after{right:-9px}
+.ticket .bot{padding:16px 18px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:14px;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:none}
+.kv span{color:var(--muted)}
+.kv b{font-weight:500;text-align:right}
+.rowsplit{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* ── misc ─────────────────────────────────────────────────── */
+.muted{color:var(--muted)}
+.sep{height:1px;background:var(--line);margin:14px 0}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:12px;
+  font-weight:500;background:var(--c360-sel-bg);color:#C0392B;border:1px solid var(--c360-step-line)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:16px}
+.card h3{margin:0 0 10px;font-size:14px;font-weight:600}
+.demo{margin-top:22px;border:2px dashed var(--c360-step-line);border-radius:var(--r-m);padding:13px 14px}
+.demo b{font-size:13px;color:#C0392B}
+.demo p{margin:3px 0 10px;font-size:12px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 15px;
+  border-radius:9px;background:#C0392B;color:#fff;font-weight:600;font-size:14px;border:1px solid var(--c360-red);cursor:pointer}
+.btn:hover{background:#992D22;border-color:#992D22}
+.btn.ghost{background:transparent;color:#C0392B;border-color:var(--c360-step-line)}
+.btn.ghost:hover{background:var(--c360-sel-bg)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:8px}
+.btn.big{padding:13px 18px;font-size:15px;border-radius:12px;width:100%}
+.label.f{display:block;margin-bottom:12px}
+label.f>span{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+label.f>small{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+@media(max-width:520px){.land-stats{flex-wrap:wrap;gap:14px}.land-divider{display:none}}
+/* ── step bar (verify screen) ────────────────────────────── */
+.stepbar{display:flex;align-items:flex-start;gap:0;margin:0 0 20px;position:relative}
+.stepbar::before{content:"";position:absolute;top:14px;left:14px;right:14px;height:2px;background:var(--c360-step-line);z-index:0}
+.stepbar .s{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;z-index:1}
+.stepbar .s .num{width:28px;height:28px;border-radius:50%;border:2px solid #ddd;background:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#aaa}
+.stepbar .s.done .num{border-color:#C0392B;background:#C0392B;color:#fff}
+.stepbar .s.active .num{border-color:#C0392B;background:var(--c360-sel-bg);color:#C0392B}
+.stepbar .s .lbl{font-size:9.5px;color:#bbb;text-align:center;white-space:nowrap}
+.stepbar .s.done .lbl,.stepbar .s.active .lbl{color:#C0392B;font-weight:600}
+</style>
+
+</head>
+<body>
+<div id="toasts"></div>
+<header class="topbar">
+  <span class="brand">Careers360 <em>Counselling</em></span>
+  <span class="spacer"></span>
+  <button class="hbtn" id="themeBtn">Theme</button>
+  <button class="hbtn" id="resetBtn">Start over</button>
+</header>
+<main id="root"></main>
+<script>
+"use strict";
+/* ============================================================
+   CounselQueue — offline counselling desk + token manager
+   Single-file prototype. All state in memory, mirrored to
+   localStorage so a refresh keeps the demo going.
+   ============================================================ */
+
+const STREAMS = [
+  {code:"PCM",  name:"Science – PCM"},
+  {code:"PCB",  name:"Science – PCB"},
+  {code:"PCMB", name:"Science – PCMB"},
+  {code:"COM",  name:"Commerce"},
+  {code:"HUM",  name:"Humanities / Arts"},
+  {code:"OTH",  name:"Other"}
+];
+const EXAMS = ["JEE","NEET","CUET","CLAT","Other","None / not sure"];
+const CLARITY = ["Very clear","Have shortlisted options","Need help shortlisting","Completely confused"];
+const HELP = ["College selection","Course selection","College & course comparison",
+  "Admission / counselling","Cut-offs & college chances","Entrance exams","Other"];
+const CLASSES = ["Class 11","Class 12","Dropper / repeat year","Graduate","Parent enquiring"];
+const OUTCOMES = [
+  {v:"hot", l:"Ready to apply"},
+  {v:"warm", l:"Interested, needs time"},
+  {v:"cold", l:"Just exploring"},
+  {v:"na", l:"Not a fit"}
+];
+const uid = p => p + Math.random().toString(36).slice(2,8);
+const now = () => Date.now();
+const MIN = 60000;
+const pad2 = n => String(n).padStart(2,"0");
+const fmtTime = ts => { if(!ts) return "—"; const d=new Date(ts); return pad2(d.getHours())+":"+pad2(d.getMinutes()); };
+const fmtDur = ms => { if(ms==null) return "—"; const m=Math.floor(ms/MIN), s=Math.floor((ms%MIN)/1000); return m+"m "+pad2(s)+"s"; };
+const fmtMins = ms => ms==null?"—":Math.max(0,Math.round(ms/MIN))+" min";
+const todayISO = (off=0) => { const d=new Date(); d.setDate(d.getDate()+off); return d.toISOString().slice(0,10); };
+const prettyDate = iso => { const d=new Date(iso+"T00:00:00");
+  return d.toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"}); };
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const streamName = c => (STREAMS.find(s=>s.code===c)||{name:c}).name;
+
+/* ---------------- seed ---------------- */
+function seed(){
+  const ev1 = {id:"ev_gwl", city:"Gwalior", venue:"Hotel Landmark, City Centre", date:todayISO(),
+    start:"10:00", end:"18:00", status:"live", capacity:120};
+  const ev2 = {id:"ev_idr", city:"Indore", venue:"Brilliant Convention Centre", date:todayISO(2),
+    start:"10:00", end:"17:00", status:"planned", capacity:150};
+  const ev3 = {id:"ev_jai", city:"Jaipur", venue:"Hotel Clarks Amer", date:todayISO(5),
+    start:"09:30", end:"18:00", status:"planned", capacity:200};
+
+  const cs = [
+    {id:"c_meera", email:"meera@careers360.com", name:"Meera Iyer", phone:"98110 22001", desk:"Desk 1", streams:["PCM","PCMB"], eventId:"ev_gwl", status:"active", avg:14},
+    {id:"c_rahul", email:"rahul@careers360.com", name:"Rahul Verma", phone:"98110 22002", desk:"Desk 2", streams:["PCB","PCMB"], eventId:"ev_gwl", status:"active", avg:17},
+    {id:"c_aditi", email:"aditi@careers360.com", name:"Aditi Sharma", phone:"98110 22003", desk:"Desk 3", streams:["COM","HUM","OTH"], eventId:"ev_gwl", status:"break", avg:12},
+    {id:"c_farid", email:"farid@careers360.com", name:"Farid Khan", phone:"98110 22004", desk:"Desk 1", streams:["PCM","COM"], eventId:"ev_idr", status:"offline", avg:15},
+    {id:"c_nisha", email:"nisha@careers360.com", name:"Nisha Rao", phone:"98110 22005", desk:"Desk 2", streams:["PCB","OTH"], eventId:"ev_idr", status:"offline", avg:16}
+  ];
+
+  const t = now();
+  const mk = (o) => Object.assign({
+    id:uid("s_"), source:"qr", consent:"pending", status:"waiting", notes:[], profile:{},
+    checkinAt:t, calledAt:null, startAt:null, endAt:null, recalls:0, feedback:null
+  }, o);
+
+  const students = [
+    mk({token:"PCB-01", school:"Delhi Public School, Gwalior", parentPhone:"90000 20001", name:"Ankit Patel", phone:"90000 10001", email:"ankit.p@example.com", stream:"PCB", klass:"Class 12",
+        eventId:"ev_gwl", counsellorId:"c_rahul", status:"done", consent:"given", checkinAt:t-72*MIN, calledAt:t-64*MIN,
+        startAt:t-63*MIN, endAt:t-45*MIN, profile:{course:"MBBS", exams:["NEET"], clarity:"Have shortlisted options", help:["College selection", "Cut-offs & college chances"], city:"Gwalior", target:"NEET 2027", budget:"8-12 L", outcome:"hot",
+        colleges:"AIIMS Bhopal, MGM Indore", followUp:todayISO(3)}, notes:[{t:t-50*MIN,by:"Rahul Verma",txt:"Strong bio scores. Wants govt college first, private as backup."}], feedback:5}),
+    mk({token:"PCM-02", school:"Carmel Convent, Gwalior", parentPhone:"90000 20002", name:"Priya Nair", phone:"90000 10002", email:"priya.nair@example.com", stream:"PCM", klass:"Class 12",
+        eventId:"ev_gwl", counsellorId:"c_meera", status:"in_session", consent:"given", checkinAt:t-38*MIN,
+        calledAt:t-12*MIN, startAt:t-11*MIN, profile:{course:"B.Tech Computer Science", exams:["JEE", "CUET"], clarity:"Need help shortlisting", help:["College selection", "College & course comparison"], city:"Gwalior", target:"JEE Main", budget:"4-8 L"}, notes:[]}),
+    mk({token:"PCM-03", school:"Kendriya Vidyalaya No.1", parentPhone:"90000 20003", name:"Sahil Yadav", phone:"90000 10003", email:"sahil.y@example.com", stream:"PCM", klass:"Dropper / repeat year",
+        eventId:"ev_gwl", counsellorId:"c_meera", status:"waiting", consent:"given", checkinAt:t-31*MIN, profile:{course:"B.Tech Mechanical", exams:["JEE"], clarity:"Completely confused", help:["Course selection", "Entrance exams"]}}),
+    mk({token:"PCB-04", school:"St. Paul's School", parentPhone:"90000 20004", name:"Fatima Sheikh", phone:"90000 10004", email:"fatima.s@example.com", stream:"PCB", klass:"Class 11",
+        eventId:"ev_gwl", counsellorId:"c_rahul", status:"waiting", consent:"pending", checkinAt:t-27*MIN, source:"reception", profile:{course:"BDS or BSc Nursing", exams:["NEET"], clarity:"Completely confused", help:["Course selection", "Admission / counselling"]}}),
+    mk({token:"COM-05", school:"Scindia Kanya Vidyalaya", parentPhone:"90000 20005", name:"Devansh Gupta", phone:"90000 10005", email:"devansh@example.com", stream:"COM", klass:"Graduate",
+        eventId:"ev_gwl", counsellorId:"c_aditi", status:"waiting", consent:"given", checkinAt:t-24*MIN, profile:{course:"BBA then MBA", exams:["CUET"], clarity:"Very clear", help:["College selection"]}}),
+    mk({token:"PCM-06", school:"Delhi Public School, Gwalior", parentPhone:"90000 20006", name:"Ritika Bose", phone:"90000 10006", email:"ritika.b@example.com", stream:"PCM", klass:"Class 12",
+        eventId:"ev_gwl", counsellorId:"c_meera", status:"waiting", consent:"given", checkinAt:t-19*MIN, profile:{course:"B.Tech Electronics", exams:["JEE", "CUET"], clarity:"Have shortlisted options", help:["Cut-offs & college chances"]}}),
+    mk({token:"PCB-07", school:"Gyan Ganga Vidyalaya", parentPhone:"90000 20007", name:"Karan Singh", phone:"90000 10007", email:"karan.s@example.com", stream:"PCB", klass:"Class 12",
+        eventId:"ev_gwl", counsellorId:"c_rahul", status:"no_show", consent:"given", checkinAt:t-45*MIN, calledAt:t-20*MIN, recalls:1, profile:{course:"MBBS", exams:["NEET"], clarity:"Need help shortlisting", help:["Admission / counselling"]}}),
+    mk({token:"HUM-08", school:"Little Angels HS School", parentPhone:"90000 20008", name:"Sneha Kulkarni", phone:"90000 10008", email:"sneha.k@example.com", stream:"HUM", klass:"Class 12",
+        eventId:"ev_gwl", counsellorId:"c_aditi", status:"waiting", consent:"given", checkinAt:t-9*MIN, profile:{course:"BA LLB", exams:["CLAT", "CUET"], clarity:"Have shortlisted options", help:["College selection", "Entrance exams"]}}),
+    mk({token:"HUM-09", school:"Bal Bharti, Gwalior", parentPhone:"90000 20009", name:"Mohit Raj", phone:"90000 10009", email:"mohit.raj@example.com", stream:"HUM", klass:"Class 12",
+        eventId:"ev_gwl", counsellorId:"c_meera", status:"waiting", consent:"pending", checkinAt:t-4*MIN, source:"reception"})
+  ];
+
+  const users = [
+    {id:"u_admin", name:"Nikhil Bhatia", email:"admin@careers360.com", pass:"admin123", role:"superadmin", title:"Head of counselling operations"},
+    {id:"u_front", name:"Pooja Menon", email:"reception@careers360.com", pass:"desk123", role:"reception", title:"Front desk, Gwalior", eventId:"ev_gwl"},
+    ...cs.map(c=>({id:"u_"+c.id, name:c.name, email:c.email, pass:"desk123", role:"counsellor",
+                   title:c.desk+", "+({ev_gwl:"Gwalior",ev_idr:"Indore",ev_jai:"Jaipur"}[c.eventId]||""), counsellorId:c.id, eventId:c.eventId}))
+  ];
+
+  return {
+    v:5,
+    users,
+    events:[ev1,ev2,ev3],
+    counsellors:cs,
+    students,
+    seq:{ev_gwl:9, ev_idr:0, ev_jai:0},
+    settings:{targetSession:15, waitSla:30, recallLimit:2, autoAssign:true, waEnabled:true},
+    wa:[{t:t-27*MIN, to:"90000 10004", txt:"Your check-in at Careers360 Gwalior is confirmed. Token MED-04."}],
+    session:{authUserId:null, eventId:"ev_gwl", counsellorId:"c_meera", view:"", hallTab:"all", filter:{}, find:""},
+    studentFlow:{step:"scan", draft:{}, activeStudentId:null}
+  };
+}
+
+/* ---------------- store ---------------- */
+const KEY = "counselqueue.v5";
+let S;
+function load(){
+  try{ const raw = localStorage.getItem(KEY); if(raw){ const p = JSON.parse(raw); if(p && p.v===5) return p; } }catch(e){}
+  return seed();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+S = load();
+
+/* ---------------- selectors ---------------- */
+const ev = id => S.events.find(e=>e.id===id);
+const me = () => (S.users||[]).find(u=>u.id===S.session.authUserId) || null;
+const co = id => S.counsellors.find(c=>c.id===id);
+const st = id => S.students.find(s=>s.id===id);
+const eventStudents = eid => S.students.filter(s=>s.eventId===eid);
+const eventCounsellors = eid => S.counsellors.filter(c=>c.eventId===eid);
+const queueFor = cid => S.students
+  .filter(s=>s.counsellorId===cid && s.status==="waiting")
+  .sort((a,b)=>a.checkinAt-b.checkinAt);
+const currentOf = cid => S.students.find(s=>s.counsellorId===cid && (s.status==="in_session"||s.status==="called"));
+const waitMs = s => (s.calledAt||now()) - s.checkinAt;
+const isLate = s => s.status==="waiting" && waitMs(s) > S.settings.waitSla*MIN;
+
+function avgSession(cid){
+  const done = S.students.filter(s=>s.counsellorId===cid && s.status==="done" && s.startAt && s.endAt);
+  if(!done.length) return (co(cid)||{avg:15}).avg*MIN;
+  return done.reduce((a,s)=>a+(s.endAt-s.startAt),0)/done.length;
+}
+function etaFor(s){
+  const q = queueFor(s.counsellorId);
+  const pos = q.findIndex(x=>x.id===s.id);
+  if(pos<0) return {pos:0, eta:0};
+  const cur = currentOf(s.counsellorId);
+  const avg = avgSession(s.counsellorId);
+  let remaining = 0;
+  if(cur && cur.startAt) remaining = Math.max(2*MIN, avg-(now()-cur.startAt)); else if(cur) remaining = avg;
+  return {pos:pos+1, eta: remaining + pos*avg};
+}
+
+/* pick counsellor with the lightest load for a stream */
+function assignCounsellor(eventId, stream){
+  const pool = eventCounsellors(eventId).filter(c=>c.status!=="offline");
+  const match = pool.filter(c=>c.streams.includes(stream));
+  const cands = (match.length?match:pool).filter(c=>c.status==="active");
+  const final = cands.length?cands:(match.length?match:pool);
+  if(!final.length) return null;
+  return final.map(c=>({c, load:queueFor(c.id).length + (currentOf(c.id)?1:0)}))
+              .sort((a,b)=>a.load-b.load || avgSession(a.c.id)-avgSession(b.c.id))[0].c;
+}
+function nextToken(eventId, stream){
+  S.seq[eventId] = (S.seq[eventId]||0)+1;
+  return stream+"-"+pad2(S.seq[eventId]);
+}
+function sendWA(to, txt){
+  if(!S.settings.waEnabled) return;
+  S.wa.unshift({t:now(), to, txt, profile:{course:"B.Des / fashion design", exams:["None / not sure"], clarity:"Completely confused", help:["Course selection", "College & course comparison"]}});
+  S.wa = S.wa.slice(0,60);
+}
+function toast(msg, kind){
+  const el = document.createElement("div");
+  el.className = "toast"+(kind?" "+kind:"");
+  el.textContent = msg;
+  document.getElementById("toasts").appendChild(el);
+  setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .4s"; setTimeout(()=>el.remove(),400); }, 3200);
+}
+</script>
+<script>
+"use strict";
+/* ---------------- actions ---------------- */
+function checkIn(data, source){
+  const e = ev(data.eventId);
+  const dupe = S.students.find(s=>s.phone===data.phone && s.eventId===data.eventId &&
+    ["waiting","called","in_session"].includes(s.status));
+  if(dupe) return {error:"A token is already open for this number — "+dupe.token+". Ask reception to reopen it.", student:dupe};
+  const c = assignCounsellor(data.eventId, data.stream);
+  if(!c) return {error:"No counsellor is on duty for this centre yet. Reception can add you manually."};
+  const s = {
+    id:uid("s_"), token:nextToken(data.eventId, data.stream), name:data.name, phone:data.phone,
+    email:data.email, stream:data.stream, klass:data.klass, school:data.school||"",
+    parentPhone:data.parentPhone||"", eventId:data.eventId, counsellorId:c.id,
+    status:"waiting", consent: source==="qr" ? "given":"pending", source, checkinAt:now(),
+    calledAt:null, startAt:null, endAt:null, recalls:0, notes:[], feedback:null,
+    profile:{city:e?e.city:"", course:data.course||"", exams:data.exams||[],
+             clarity:data.clarity||"", help:data.help||[], streamOther:data.streamOther||""}
+  };
+  S.students.push(s);
+  if(source==="reception")
+    sendWA(s.phone, `Careers360 ${e?e.city:""}: our front desk has checked you in. Token ${s.token}, counsellor ${c.name} at ${c.desk}. Reply YES to confirm it's you and allow us to use these details for counselling.`);
+  else
+    sendWA(s.phone, `Careers360 ${e?e.city:""}: you're in the queue. Token ${s.token}, counsellor ${c.name} at ${c.desk}. Keep this chat open — we'll message you when your turn is near.`);
+  save();
+  return {student:s};
+}
+function callToken(cid, token){
+  const s = S.students.find(x=>x.token.toLowerCase()===String(token).trim().toLowerCase() && x.eventId===co(cid).eventId);
+  if(!s) return {error:"No token "+token+" at this centre today."};
+  if(s.status==="done") return {error:"Token "+s.token+" was already counselled at "+fmtTime(s.endAt)+"."};
+  if(s.counsellorId!==cid){
+    s.counsellorId = cid;
+    sendWA(s.phone, `Your counsellor changed to ${co(cid).name}, ${co(cid).desk}.`);
+  }
+  s.status="called"; s.calledAt=now();
+  sendWA(s.phone, `It's your turn. Please go to ${co(cid).desk} — ${co(cid).name}. Reply YES to confirm you're here and consent to your details being used for counselling.`);
+  save(); return {student:s};
+}
+function callNext(cid){
+  const q = queueFor(cid);
+  if(!q.length) return {error:"Queue is empty."};
+  return callToken(cid, q[0].token);
+}
+function startSession(id){ const s=st(id); s.status="in_session"; s.startAt=now(); save(); }
+function endSession(id){
+  const s=st(id); s.status="done"; s.endAt=now();
+  sendWA(s.phone, `Thanks for meeting ${co(s.counsellorId).name}. Your shortlist and next steps are on the way. Rate this session 1-5?`);
+  save();
+}
+function markNoShow(id){
+  const s=st(id); s.recalls=(s.recalls||0)+1;
+  if(s.recalls>=S.settings.recallLimit){ s.status="no_show"; sendWA(s.phone,`We called ${s.token} ${s.recalls} times. Visit the help desk to get back in the queue.`); }
+  else { s.status="waiting"; s.checkinAt=now(); s.calledAt=null;
+    sendWA(s.phone,`We called ${s.token} and missed you. You're back in the queue — next call is the last one.`); }
+  save();
+}
+function requeue(id){ const s=st(id); s.status="waiting"; s.checkinAt=now(); s.calledAt=null; s.recalls=0; save(); }
+function giveConsent(id){ const s=st(id); s.consent="given"; save(); }
+function addNote(id, by, txt){ st(id).notes.push({t:now(), by, txt}); save(); }
+function moveToTop(id){ const s=st(id); const q=queueFor(s.counsellorId); if(q[0]) s.checkinAt=q[0].checkinAt-1000; save(); }
+function reassign(id, cid){ const s=st(id); s.counsellorId=cid; s.status="waiting"; s.calledAt=null;
+  sendWA(s.phone, `You've been moved to ${co(cid).name}, ${co(cid).desk}. Token ${s.token} stays the same.`); save(); }
+
+/* ---------------- tiny QR-ish glyph (decorative, deterministic) ---------------- */
+function qrSVG(seedStr){
+  let h=0; for(let i=0;i<seedStr.length;i++) h=(h*31+seedStr.charCodeAt(i))>>>0;
+  const n=21, cells=[];
+  const rnd=()=>{ h^=h<<13; h>>>=0; h^=h>>17; h^=h<<5; h>>>=0; return h/4294967296; };
+  for(let y=0;y<n;y++) for(let x=0;x<n;x++){
+    const finder = (x<7&&y<7)||(x>n-8&&y<7)||(x<7&&y>n-8);
+    if(finder){
+      const fx = x<7?x:x-(n-7), fy = y<7?y:y-(n-7);
+      const ring = (fx===0||fx===6||fy===0||fy===6), core=(fx>=2&&fx<=4&&fy>=2&&fy<=4);
+      if(ring||core) cells.push([x,y]);
+    } else if(rnd()>0.55) cells.push([x,y]);
+  }
+  return `<svg class="qr" viewBox="0 0 ${n} ${n}" role="img" aria-label="Check-in QR code">
+    <rect width="${n}" height="${n}" fill="var(--card)"/>
+    ${cells.map(([x,y])=>`<rect x="${x}" y="${y}" width="1" height="1" fill="var(--ink)"/>`).join("")}
+  </svg>`;
+}
+
+</script>
+<script>
+"use strict";
+/* ---------------- STUDENT APP VIEWS ---------------- */
+function hallStats(e){
+  const ss = eventStudents(e.id);
+  const waiting = ss.filter(s=>s.status==="waiting");
+  const cs = eventCounsellors(e.id).filter(c=>c.status!=="offline");
+  const waits = ss.filter(s=>s.calledAt).map(s=>s.calledAt-s.checkinAt);
+  const avg = waits.length?waits.reduce((a,b)=>a+b,0)/waits.length:0;
+  return {waiting:waiting.length, desks:cs.length, avg:Math.round(avg/MIN)};
+}
+function howItWorks(){
+  return `<div class="card" style="margin-bottom:14px"><h3>How it works</h3>
+    <ol class="steps">
+      <li><b>Fill your details</b>Name, number, and what you want to study. Thirty seconds.</li>
+      <li><b>Get a token</b>It lands on your WhatsApp with your counsellor's name and desk.</li>
+      <li><b>Sit anywhere</b>No standing in line. We message you when your turn is close.</li>
+    </ol></div>`;
+}
+function carryList(){
+  return `<div class="card" style="margin-bottom:14px"><h3>Useful to have with you</h3>
+    <ul class="ticks">
+      <li>Class 10 and 12 marksheets, if you have them</li>
+      <li>Any entrance scorecard — JEE, NEET, CUET</li>
+      <li>A photo ID</li>
+      <li>A parent or guardian, if fees will be their decision</li>
+    </ul>
+    <p class="muted" style="font-size:12.5px;margin:10px 0 0">Nothing is mandatory. Come as you are — the counsellor works with whatever you bring.</p></div>`;
+}
+function helpCard(e){
+  return `<div class="card"><h3>Need a hand</h3>
+    <div class="kv"><span>Front desk</span><b>${esc(e.helpPhone||"1800 572 9877")}</b></div>
+    <div class="kv"><span>Venue</span><b>${esc(e.venue)}</b></div>
+    <div class="kv"><span>Open</span><b>${e.start} – ${e.end}</b></div>
+    <p class="muted" style="font-size:12.5px;margin:10px 0 0">Lost your token? The front desk can find it from your mobile number.</p></div>`;
+}
+function viewStudent(){
+  const f = S.studentFlow;
+  const active = f.activeStudentId ? st(f.activeStudentId) : null;
+  if(active && ["waiting","called","in_session","done","no_show"].includes(active.status)) return studentTicket(active);
+  if(f.step==="form") return studentForm();
+  if(f.step==="goals") return studentGoals();
+  if(f.step==="verify") return studentVerify();
+  return studentScan();
+}
+function studentScan(){
+  const e = ev(S.session.eventId) || S.events[0];
+  const h = hallStats(e);
+  const streams = [...new Set(eventCounsellors(e.id).flatMap(c=>c.streams))].map(streamName);
+  const d = S.studentFlow.draft || {};
+  const streamChips = STREAMS.map(x=>`<label class="streamchip ${d.stream===x.code?"sel":""}">
+    <input type="radio" name="stream" value="${x.code}" ${d.stream===x.code?"checked":""}><span>${x.name}</span></label>`).join("");
+  return `<div class="landing">
+    <!-- LEFT: brand + info -->
+    <div class="land-left">
+      <div class="land-badge"><span class="dot"></span> Live today · ${esc(e.city)}</div>
+      <h1 class="land-h1">Your future college<br><em>starts here.</em></h1>
+      <p class="land-sub">Free, expert counselling from the Careers360 team. No long lines, no chaos — scan the code or fill your details and we'll message you when it's your turn.</p>
+      <div class="land-pills">
+        ${streams.map(s=>`<span class="land-pill">📚 ${esc(s)}</span>`).join("")}
+      </div>
+      <div class="land-stats">
+        <div class="land-stat"><div class="n">${h.waiting||"—"}</div><div class="l">Waiting now</div></div>
+        <div class="land-divider"></div>
+        <div class="land-stat"><div class="n">${h.desks||"—"}</div><div class="l">Counsellors on site</div></div>
+        <div class="land-divider"></div>
+        <div class="land-stat"><div class="n">${h.avg||"—"}</div><div class="l">Min avg wait</div></div>
+      </div>
+      <p class="land-quote">"No standing in line. Scan, chill, we WhatsApp you when it's your turn."<br>
+        ${esc(e.venue)} · ${prettyDate(e.date)} · ${e.start}–${e.end}</p>
+
+      <!-- decorative SVG: abstract geometric shapes in panel -->
+      <!-- decorative SVGs -->
+      <!-- bottom-right geometric layer -->
+      <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg"
+           style="position:absolute;bottom:-20px;right:-20px;width:60%;opacity:.22;pointer-events:none;z-index:0">
+        <circle cx="310" cy="180" r="140" fill="none" stroke="#fff" stroke-width="2"/>
+        <circle cx="340" cy="100" r="70"  fill="none" stroke="#fff" stroke-width="1.2"/>
+        <circle cx="260" cy="220" r="40"  fill="none" stroke="#fff" stroke-width=".8"/>
+        <polygon points="160,250 210,170 260,250" fill="none" stroke="#fff" stroke-width="1.3"/>
+        <line x1="100" y1="240" x2="160" y2="170" stroke="#fff" stroke-width="1" stroke-dasharray="5 6"/>
+        <line x1="120" y1="250" x2="190" y2="160" stroke="#fff" stroke-width=".7" stroke-dasharray="3 7"/>
+      </svg>
+      <!-- top-left floating dots layer -->
+      <svg viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg"
+           style="position:absolute;top:10px;left:10px;width:16%;opacity:.28;pointer-events:none;z-index:0">
+        <circle cx="20" cy="30"  r="6"   fill="#fff"/>
+        <circle cx="40" cy="20"  r="4"   fill="#fff" opacity=".75"/>
+        <circle cx="55" cy="40"  r="3"   fill="#fff" opacity=".55"/>
+        <circle cx="18" cy="55"  r="3"   fill="#fff" opacity=".6"/>
+        <circle cx="70" cy="15"  r="5"   fill="#fff" opacity=".45"/>
+        <circle cx="20" cy="100" r="18"  fill="none" stroke="#fff" stroke-width="1.5"/>
+        <circle cx="20" cy="100" r="10"  fill="rgba(255,255,255,.12)"/>
+      </svg>
+    </div>
+
+    <!-- RIGHT: QR + inline form -->
+    <div class="land-right">
+      <div class="land-box">
+        <div class="land-qr-wrap">
+          ${qrSVG(e.id+e.date)}
+          <div class="land-qr-info">
+            <div class="qt">📱 Scan to check in</div>
+            <div class="qd">Point your phone camera at the code. Opens the form instantly — no app needed.</div>
+          </div>
+        </div>
+        <div class="land-or">or fill your details below</div>
+
+        <h2 class="cform-title">Class 12 College &amp; Admission Guide</h2>
+        <p class="cform-sub">Got a course in mind? Let's find out where it can take you! ✨</p>
+
+        <form id="sform" class="cform" novalidate>
+          <label class="f"><span>1. Student name</span>
+            <input type="text" name="name" value="${esc(d.name||"")}" placeholder="As on your marksheet" autocomplete="name"></label>
+          <label class="f"><span>2. School</span>
+            <input type="text" name="school" value="${esc(d.school||"")}" placeholder="School name and city"></label>
+          <label class="f"><span>3. Mobile number</span>
+            <div class="phonewrap-in">
+              <span class="pre">+91</span>
+              <input type="tel" name="phone" value="${esc(d.phone||"")}" placeholder="10-digit number" inputmode="numeric" autocomplete="tel">
+            </div>
+            <small>📲 Your token and turn alert arrive here on WhatsApp.</small></label>
+          <div class="stream-sect">
+            <label>4. Stream</label>
+            <span class="stream-hint">This decides which counsellor you're sent to.</span>
+            <div class="streamgrid">${streamChips}</div>
+          </div>
+          <div id="sformerr" style="margin-top:10px"></div>
+          <button class="cform-submit" type="submit">Get my free counselling token 🎫</button>
+        </form>
+        <p class="land-foot">🔒 Your details are private and used only for counselling. · <span style="color:var(--c360-red)">careers360.com</span></p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function stepBar(active){
+  const steps=[["1","About You"],["2","Career"],["3","Help"],["4","Verify"]];
+  return `<div class="stepbar" style="margin:0 0 18px">${steps.map(([n,l],i)=>{
+    const cls=i<active?"done":i===active?"active":"";
+    return `<div class="s ${cls}"><div class="num">${i<active?`<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3.2 3.2 5.8-5.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`:n}</div><div class="lbl">${l}</div></div>`;
+  }).join("")}</div>`;}
+function studentForm(){
+  /* Step 1 is now the landing page inline form.
+     This function is kept for the router but redirects to goals immediately
+     since name/school/phone/stream are already captured at scan. */
+  return studentGoals();
+}
+
+function clarityDots(val){
+  const G="<span style=\"color:#F5A623\">★</span>", E="<span style=\"color:#D9D9D9\">★</span>";
+  const opts=[
+    {v:"Very clear",              stars:G+G+G+G, label:"Very Clear",   mood:"Confident"},
+    {v:"Have shortlisted options",stars:G+G+G+E, label:"Shortlisted",  mood:"Exploring"},
+    {v:"Need help shortlisting",  stars:G+G+E+E, label:"Need Help",    mood:"Guiding"},
+    {v:"Completely confused",     stars:G+E+E+E, label:"Confused",     mood:"Open-minded"}
+  ];
+  return opts.map(o=>`<label class="claropt ${val===o.v?"sel":""}">
+    <input type="radio" name="clarity" value="${esc(o.v)}" ${val===o.v?"checked":""}>
+    <div class="stars">${o.stars}</div>
+    <div class="clarlabel">${o.label}</div>
+    <div class="clarmood">${o.mood}</div></label>`).join("");
+}
+function studentGoals(){
+  const d = S.studentFlow.draft || {};
+  const ex = d.exams||[], hp = d.help||[];
+  const EXAM_OPTS = ["JEE","NEET","CUET","CLAT","Not sure yet","Other"];
+  const helpChips = HELP.map(x=>`<label class="helpchip ${hp.includes(x)?"sel":""}">
+    <input type="checkbox" name="help" value="${esc(x)}" ${hp.includes(x)?"checked":""}><span>${esc(x)}</span></label>`).join("");
+  return `<div class="phonewrap"><div class="phone">
+    <div class="bar"><span class="dot"></span> ${esc((ev(S.session.eventId)||{}).city||"")} · What you need</div>
+    <div class="body">
+      ${stepBar(1)}
+      <form id="sgoals" novalidate>
+
+        <p class="formtag">Step 2 of 4 — Your Career Direction</p>
+        <h2 class="formtitle" style="margin-bottom:12px">What course or career are you targeting?</h2>
+        <label class="f" style="margin-bottom:14px">
+          <input type="text" name="course" value="${esc(d.course||"")}" placeholder="e.g. B.Tech CSE, MBBS, BBA, still deciding…"></label>
+
+        <label class="f"><span>Which entrance exams are you preparing for?</span></label>
+        <div class="streamgrid" style="margin:6px 0 18px">${EXAM_OPTS.map(x=>`<label class="streamchip ${ex.includes(x)?"sel":""}">
+          <input type="checkbox" name="exams" value="${esc(x)}" ${ex.includes(x)?"checked":""}><span>${esc(x)}</span></label>`).join("")}</div>
+
+        <div class="sep" style="margin:4px 0 18px"></div>
+        <p class="formtag">Step 3 of 4 — Where You Are Right Now</p>
+        <h2 class="formtitle" style="margin-bottom:12px">How clear are you about your college / course choice?</h2>
+        <div class="clarscale" style="margin-bottom:20px">${clarityDots(d.clarity||"")}</div>
+
+        <div class="sep" style="margin:4px 0 18px"></div>
+        <p class="formtag">Step 4 of 4 — How Can Careers360 Help?</p>
+        <h2 class="formtitle" style="margin-bottom:12px">What would you like help with?</h2>
+        <div class="helpgrid" style="margin-bottom:18px">${helpChips}</div>
+
+        <label class="check" style="margin-top:4px"><input type="checkbox" name="consent" ${d.consent?"checked":""}>
+          <span>A Careers360 counsellor can use these details to advise me and contact me about admissions. I can withdraw any time.</span></label>
+        <div id="sgoalserr"></div>
+        <button class="btn big" type="submit" style="margin-top:14px;background:var(--c360-red);border-color:var(--c360-red)">Get my token</button>
+        <button class="btn ghost sm" type="button" data-act="sf-back1" style="margin-top:10px">Back</button>
+      </form>
+    </div></div></div>`;
+}
+function studentVerify(){
+  const d = S.studentFlow.draft;
+  return `<div class="phonewrap"><div class="phone">
+    <div class="bar"><span class="dot"></span> Verify your number</div>
+    <div class="body">
+      ${stepBar(2)}
+      <h2>Check your WhatsApp 📱</h2>
+      <p class="lede">We sent a 4-digit code to <b>${esc(d.phone)}</b>. This keeps your number secure.</p>
+      <div class="notice"><b>Prototype shortcut</b> — the code is 1234, any 4 digits work here.</div>
+      <label class="f" style="margin-top:14px"><span>Enter code</span>
+        <input type="text" id="otp" inputmode="numeric" maxlength="4" placeholder="1234"
+          style="font-size:30px;letter-spacing:10px;text-align:center;border:2px solid var(--c360-step-line);border-radius:12px">
+        </label>
+      <button class="btn big" data-act="sf-verify"
+        style="background:linear-gradient(120deg,#C0392B 0%,#E85D3A 55%,#F39C12 100%);border:none;font-weight:700;box-shadow:0 4px 16px rgba(192,57,43,.25)">
+        Confirm &amp; get my token 🎫</button>
+      <button class="btn ghost sm" data-act="sf-back" style="margin-top:10px">← Change number</button>
+    </div></div></div>`;
+}
+function studentTicket(s){
+  const c = co(s.counsellorId), e = ev(s.eventId);
+  const {pos, eta} = etaFor(s);
+  const ahead = Math.max(0,pos-1);
+  const serving = currentOf(c.id);
+  let state = "";
+  if(s.status==="done") state = `<div class="wa"><b>Session complete.</b> Your shortlist and next steps are on their way over WhatsApp.</div>`;
+  else if(s.status==="in_session") state = `<div class="notice"><b>In session now</b>You're with ${esc(c.name)} at ${esc(c.desk)}.</div>`;
+  else if(s.status==="called") state = `<div class="notice"><b>It's your turn — go to ${esc(c.desk)}</b>Show this token to ${esc(c.name)}. We hold your place for two calls.</div>`;
+  else if(s.status==="no_show") state = `<div class="notice"><b>We missed you twice</b>Visit the front desk and they'll put you back in the queue.</div>`;
+  else if(ahead===0) state = `<div class="notice"><b>You're next</b>Stay near ${esc(c.desk)} — you'll be called any moment.</div>`;
+  else state = "";
+
+  const live = ["waiting"].includes(s.status) ? `<div class="card" style="padding:13px 14px;margin-bottom:14px"><div class="rowsplit">
+      <div><div class="bignum">${ahead}</div><div class="muted" style="font-size:12.5px">${ahead===1?"person":"people"} ahead of you</div></div>
+      <div style="margin-left:auto;text-align:right"><div class="bignum">~${Math.max(1,Math.round(eta/MIN))}</div>
+      <div class="muted" style="font-size:12.5px">min estimated wait</div></div></div>
+      <div class="sep" style="margin:12px 0"></div>
+      <div class="kv"><span>Now serving at ${esc(c.desk)}</span><b>${serving?esc(serving.token):"free"}</b></div>
+      <div class="kv"><span>Expected around</span><b>${fmtTime(now()+eta)}</b></div></div>` : "";
+
+  const consentBlock = s.consent==="pending" && s.status!=="done"
+    ? `<div class="wa" style="margin-top:14px"><b>One tap left.</b> The front desk started your token. Confirm it's you and that a counsellor may use these details.
+        <div style="margin-top:10px"><button class="btn sm" data-act="sf-consent" data-id="${s.id}">Yes, that's me</button></div></div>` : "";
+  const fb = s.status==="done" && !s.feedback
+    ? `<div class="card" style="margin-top:14px"><h3>How was the session?</h3>
+        <div class="rowsplit">${[1,2,3,4,5].map(n=>`<button class="btn ghost sm" data-act="sf-rate" data-id="${s.id}" data-n="${n}">${n}</button>`).join("")}</div></div>`
+    : (s.feedback?`<p class="muted" style="font-size:12.5px;margin-top:12px">You rated this session ${s.feedback}/5. Thank you.</p>`:"");
+
+  return `<div class="phonewrap"><div class="phone">
+    <div class="bar"><span class="dot"></span> ${esc(e.city)} · token live</div>
+    <div class="body">
+      ${state}${live}
+      <div class="ticket">
+        <div class="top">
+          <div class="lbl">Your token</div>
+          <div class="big">${esc(s.token)}</div>
+          <div class="lbl" style="margin-top:6px">${esc(streamName(s.stream))} counselling</div>
+        </div>
+        <div class="perf"></div>
+        <div class="bot">
+          <div class="kv"><span>Counsellor</span><b>${esc(c.name)}</b></div>
+          <div class="kv"><span>Where</span><b>${esc(c.desk)}, ${esc(e.venue)}</b></div>
+          <div class="kv"><span>Checked in</span><b>${fmtTime(s.checkinAt)}</b></div>
+          <div class="kv"><span>Session slot</span><b>${s.startAt?fmtTime(s.startAt)+" – "+(s.endAt?fmtTime(s.endAt):"now"):"~"+fmtTime(now()+eta)}</b></div>
+          <div class="kv"><span>Name</span><b>${esc(s.name)}</b></div>
+          <div class="kv"><span>Mobile</span><b>${esc(s.phone)}</b></div>
+        </div>
+      </div>
+      ${consentBlock}${fb}
+      ${intakeCard(s)}
+      ${s.status!=="done"?carryList():""}
+      ${helpCard(e)}
+      <div class="rowsplit" style="margin-top:14px">
+        ${["waiting","called"].includes(s.status)?`<button class="btn ghost sm" data-act="sf-leave" data-id="${s.id}">Give up my turn</button>`:""}
+        <button class="btn ghost sm" data-act="sf-new">Check in someone else</button>
+      </div>
+      ${demoPanel(s)}
+    </div></div></div>`;
+}
+function chips(arr){ return (arr||[]).map(x=>`<span class="pill">${esc(x)}</span>`).join(" "); }
+function intakeCard(s){
+  const p = s.profile||{};
+  if(!p.course && !(p.exams||[]).length && !p.clarity && !(p.help||[]).length) return "";
+  return `<div class="card" style="margin-top:14px"><h3>What you told us</h3>
+    ${p.course?`<div class="kv"><span>Targeting</span><b>${esc(p.course)}</b></div>`:""}
+    <div class="kv"><span>Stream</span><b>${esc(streamName(s.stream))}</b></div>
+    ${s.school?`<div class="kv"><span>School</span><b>${esc(s.school)}</b></div>`:""}
+    ${p.clarity?`<div class="kv"><span>How clear you feel</span><b>${esc(p.clarity)}</b></div>`:""}
+    ${(p.exams||[]).length?`<div style="padding:8px 0 2px"><div class="muted" style="font-size:12.5px;margin-bottom:5px">Exams</div>${chips(p.exams)}</div>`:""}
+    ${(p.help||[]).length?`<div style="padding:8px 0 2px"><div class="muted" style="font-size:12.5px;margin-bottom:5px">Help wanted with</div>${chips(p.help)}</div>`:""}
+    <p class="muted" style="font-size:12px;margin:10px 0 0">Your counsellor can correct any of this during the session.</p></div>`;
+}
+function demoPanel(s){
+  return `<div class="demo">
+    <b>Prototype controls</b>
+    <p>In the real thing these happen at the counsellor's desk. Use them to see every state of this screen.</p>
+    <div class="rowsplit">
+      <button class="btn ghost sm" data-act="dm-advance" data-id="${s.id}">Move the queue ahead</button>
+      <button class="btn ghost sm" data-act="dm-call" data-id="${s.id}">Call me now</button>
+      <button class="btn ghost sm" data-act="dm-start" data-id="${s.id}">Start my session</button>
+      <button class="btn ghost sm" data-act="dm-end" data-id="${s.id}">Finish my session</button>
+    </div></div>`;
+}
+</script>
+<script>
+"use strict";
+/* ---------------- student app boot ---------------- */
+function render(){ document.getElementById("root").innerHTML = viewStudent(); save(); }
+function validPhone(v){ return /^[0-9]{10}$/.test(String(v).replace(/\D/g,"")); }
+function validEmail(v){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v); }
+
+/* demo helpers: stand in for what a counsellor would do at their desk */
+function demoAdvance(id){
+  const s = st(id), q = queueFor(s.counsellorId);
+  const ahead = q.filter(x=>x.checkinAt < s.checkinAt);
+  if(!ahead.length){ toast("Nobody ahead of you — you're next"); return; }
+  const x = ahead[0];
+  x.status="done"; x.calledAt=x.calledAt||now()-12*MIN; x.startAt=now()-11*MIN; x.endAt=now();
+  const cur = currentOf(s.counsellorId);
+  if(cur && cur.id!==x.id){ cur.status="done"; cur.startAt=cur.startAt||now()-10*MIN; cur.endAt=now(); }
+  save(); toast(x.token+" finished · queue moved up","ok");
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-act]"); if(!t) return;
+  const a = t.dataset.act, id = t.dataset.id;
+  switch(a){
+    case "sf-scan": S.studentFlow.step="form"; render(); break;
+    case "sf-home": S.studentFlow.step="scan"; render(); break;
+    case "sf-back": S.studentFlow.step="goals"; render(); break;
+    case "sf-back1": S.studentFlow.step="form"; render(); break;
+    case "sf-verify": {
+      const d = S.studentFlow.draft;
+      const res = checkIn({...d, eventId:S.session.eventId}, "qr");
+      if(res.error){ toast(res.error,"bad"); if(res.student){ S.studentFlow.activeStudentId=res.student.id; render(); } break; }
+      S.studentFlow.activeStudentId = res.student.id; S.studentFlow.step="ticket";
+      toast("Token "+res.student.token+" issued","ok"); render(); break;
+    }
+    case "sf-consent": giveConsent(id); toast("Confirmed — thank you","ok"); render(); break;
+    case "sf-rate": st(id).feedback = +t.dataset.n; save(); toast("Thanks for the rating","ok"); render(); break;
+    case "sf-leave": { const s=st(id); s.status="cancelled";
+      sendWA(s.phone,"Your token "+s.token+" was released. Scan again any time before we close.");
+      save(); S.studentFlow.activeStudentId=null; S.studentFlow.step="scan"; toast("Token released"); render(); break; }
+    case "sf-new": S.studentFlow={step:"scan",draft:{},activeStudentId:null}; render(); break;
+    case "dm-advance": demoAdvance(id); render(); break;
+    case "dm-call": { const s=st(id); const r=callToken(s.counsellorId, s.token);
+      if(r.error) toast(r.error,"bad"); else toast("You've been called to "+co(s.counsellorId).desk,"ok"); render(); break; }
+    case "dm-start": { const s=st(id); if(s.consent!=="given"){ toast("Confirm it's you first","warn"); break; }
+      if(s.status==="waiting") callToken(s.counsellorId, s.token);
+      startSession(id); toast("Session started","ok"); render(); break; }
+    case "dm-end": { const s=st(id); if(!s.startAt) startSession(id); endSession(id); toast("Session complete","ok"); render(); break; }
+  }
+});
+document.addEventListener("submit", e => {
+  e.preventDefault();
+  const f = e.target;
+  if(f.id==="sform"){
+    const d = Object.fromEntries(new FormData(f).entries());
+    const errs=[];
+    if(!d.name || d.name.trim().length<3) errs.push("Enter your full name.");
+    if(!d.school || d.school.trim().length<2) errs.push("Tell us which school you're in.");
+    if(!validPhone(d.phone)) errs.push("A 10-digit mobile number is needed for the turn alert.");
+    if(!d.stream) errs.push("Pick your stream so we can send you to the right counsellor.");
+    if(errs.length){ const el=document.getElementById("sformerr");
+      if(el) el.innerHTML=errs.map(x=>`<span class="err">${esc(x)}</span>`).join(""); return; }
+    S.studentFlow.draft = Object.assign({}, S.studentFlow.draft, d);
+    S.studentFlow.step="verify"; render(); return;
+  }
+  if(f.id==="sgoals"){
+    const fd = new FormData(f);
+    const d = Object.fromEntries(fd.entries());
+    d.exams = fd.getAll("exams"); d.help = fd.getAll("help"); if(!d.clarity) d.clarity = fd.get("clarity")||"";
+    const errs=[];
+    if(!d.course || d.course.trim().length<2) errs.push("Tell us the course or career you have in mind — “not sure” is a fine answer.");
+    if(!d.help.length) errs.push("Pick at least one thing you'd like help with.");
+    if(!d.consent) errs.push("Tick the consent line so a counsellor can advise you.");
+    if(errs.length){ document.getElementById("sgoalserr").innerHTML = errs.map(x=>`<span class="err">${esc(x)}</span>`).join(""); return; }
+    S.studentFlow.draft = Object.assign({}, S.studentFlow.draft, d);
+    S.studentFlow.step="verify"; render(); return;
+  }
+});
+document.getElementById("themeBtn").addEventListener("click", ()=>{
+  const next = document.documentElement.getAttribute("data-theme")==="dark" ? "light":"dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try{ localStorage.setItem("counselqueue.theme", next); }catch(e){}
+});
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  S = seed(); save(); toast("Prototype reset"); render();
+});
+try{ const th=localStorage.getItem("counselqueue.theme"); if(th) document.documentElement.setAttribute("data-theme", th); }catch(e){}
+setInterval(()=>{ const f=S.studentFlow; if(f.activeStudentId) render(); }, 15000);
+/* chip/card selection highlight: CSS-only via :has not reliable on all phones,
+   so toggle .sel class here for streamchip, claropt, helpchip */
+document.addEventListener("change", ev => {
+  if(!ev.target.closest("#sform, #sgoals")) return;
+  const target = ev.target;
+  if(target.type === "radio" && target.name === "stream"){
+    document.querySelectorAll(".streamchip").forEach(c=>c.classList.toggle("sel", c.querySelector("input")===target));
+  }
+  if(target.type === "radio" && target.name === "clarity"){
+    document.querySelectorAll(".claropt").forEach(c=>c.classList.toggle("sel", c.querySelector("input")===target));
+  }
+  if(target.type === "checkbox"){
+    const chip = target.closest(".streamchip,.helpchip");
+    if(chip) chip.classList.toggle("sel", target.checked);
+  }
+}, true);
+render();
+</script>
+</body>
+</html>
