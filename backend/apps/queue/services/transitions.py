@@ -22,6 +22,20 @@ def close_centre(centre: Centre, actor) -> int:
     waiting = Student.objects.select_for_update().filter(centre=locked, status=StudentStatus.WAITING)
     ids = list(waiting.order_by("id").values_list("id", "token"))
     if ids:
+        now = timezone.now()
+        AuditEvent.objects.bulk_create(
+            [
+                AuditEvent(
+                    student_id=sid,
+                    centre=locked,
+                    verb=AuditEvent.Verb.CENTRE_CLOSED,
+                    actor=actor,
+                    at=now,
+                    data={"to": "not_counselled"},
+                )
+                for sid, _ in ids
+            ]
+        )
         Student.objects.filter(pk__in=[i for i, _ in ids]).update(
             status=StudentStatus.NOT_COUNSELLED, updated_at=timezone.now()
         )

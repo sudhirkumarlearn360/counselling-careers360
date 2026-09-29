@@ -27,7 +27,7 @@ LoginAttempt (keyed by normalised email, no FK)
   - `AuditEvent.on_behalf_of` is set when an ops lead works a desk (CQ-5).
   - `Student.consent_by` null means the student consented themselves; otherwise it is the counsellor who recorded verbal consent.
   - `Note.author` is the counsellor the note is written as. When an ops lead writes it on a desk, the author is that desk's counsellor.
-  - `AuditEvent.student` null means a centre-level event (`centre_live`, `centre_closed`, `exported`).
+  - `AuditEvent.student` null means a centre-level event (`centre_live`, `centre_closed`, `duty_changed`, `exported`).
   - `Message.student` null is only for `otp_code`, which is sent before any Student exists.
 - **`SessionRecord` is the history table.** `Student.called_at`, `started_at`, `ended_at` and `queue_at` describe only the current or latest visit, and a requeue clears them. One `SessionRecord` is written on each `complete_session`. Session length, averages, "counselled today" and exports read `SessionRecord` (CQ-21/38/60/61).
 - **`SessionRecord` fields are snapshots taken at completion.** `outcome` is the outcome at that moment, and `queue_at` is the visit's queue start, so wait = `called_at − queue_at` survives a later requeue. Later edits to the Student do not rewrite history.
@@ -233,7 +233,7 @@ Provided by `rest_framework_simplejwt.token_blacklist` (its own migrations, no C
 | `id` | BigAutoField | no | PK |
 | `student` | FK → Student | yes | on_delete=PROTECT |
 | `centre` | FK → Centre | no | on_delete=PROTECT |
-| `verb` | CharField(20) | no | choices: checked_in / called / started / completed / missed / no_show / released / requeued / moved / pulled_forward / consent_given / edited / noted / rated / message_failed / centre_live / centre_closed / exported |
+| `verb` | CharField(20) | no | choices: checked_in / called / started / completed / missed / no_show / released / requeued / moved / pulled_forward / consent_given / edited / noted / rated / message_failed / centre_live / centre_closed / duty_changed / exported |
 | `actor` | FK → StaffUser | yes | on_delete=PROTECT |
 | `on_behalf_of` | FK → Counsellor | yes | on_delete=PROTECT |
 | `at` | DateTimeField | no | default now() |

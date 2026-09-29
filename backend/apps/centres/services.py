@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from django.db import transaction
 
-from apps.centres.exceptions import CentreClosed, CentreInvalid, CentreNotPlanned
+from apps.centres.exceptions import CentreClosed, CentreInvalid, CentreNotLive, CentreNotPlanned
 from apps.centres.models import Centre, CentreStatus
 from apps.common.choices import Stream
 from apps.common.exceptions import NeedsConfirmation
 from apps.common.warnings import warning
-from apps.queue.models import AuditEvent
+from apps.queue.models import AuditEvent, Student, StudentStatus
 from apps.queue.services import close_centre
 
 FIELDS = ("city", "venue", "date", "opens_at", "closes_at", "expected_students", "front_desk_phone")
@@ -110,8 +110,6 @@ def go_live(centre: Centre, actor, confirm: bool = False) -> Centre:
 
 
 def waiting_count(centre: Centre) -> int:
-    from apps.queue.models import Student, StudentStatus
-
     return Student.objects.filter(centre=centre, status=StudentStatus.WAITING).count()
 
 
@@ -125,8 +123,6 @@ def close_preview(centre: Centre) -> dict:
 
 def close(centre: Centre, actor, confirm: bool) -> dict:
     if centre.status != CentreStatus.LIVE:
-        from apps.centres.exceptions import CentreNotLive
-
         raise CentreNotLive()
     if not confirm:
         preview = close_preview(centre)

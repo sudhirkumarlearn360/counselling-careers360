@@ -141,7 +141,7 @@ def update_posting(posting: Posting, values: dict, actor=None):
             "A desk label is needed.", data={"fields": {"desk_label": ["A desk label is needed."]}}
         )
     moved = centre_id != locked.centre_id
-    centre = _lock_centre(centre_id) if moved else locked.centre
+    centre = _lock_centre(centre_id)  # also refuses a closed centre, moved or not
     if moved and Posting.objects.filter(counsellor=locked.counsellor, centre=centre).exists():
         raise AlreadyPosted(f"{locked.counsellor.name} is already posted to this centre.")
     _check_desk(centre, desk, exclude_pk=locked.pk)
@@ -173,7 +173,7 @@ def set_duty(posting: Posting, duty: str, actor=None, on_behalf_of=None) -> Post
         locked.save(update_fields=["duty", "updated_at"])
         AuditEvent.objects.create(
             centre_id=locked.centre_id,
-            verb=AuditEvent.Verb.EDITED,
+            verb=AuditEvent.Verb.DUTY_CHANGED,
             actor=actor,
             on_behalf_of=on_behalf_of,
             data={"posting_id": locked.id, "duty": duty, "from": before},

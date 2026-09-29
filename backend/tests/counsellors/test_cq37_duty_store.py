@@ -54,7 +54,7 @@ def test_cq37_ops_lead_sets_duty_for_a_counsellor_with_audit(client_as, users, c
         f"{URL}?as_counsellor={counsellor.id}", {"duty": "on_break"}, format="json"
     )
     assert resp.status_code == 200
-    ev = AuditEvent.objects.get(verb="edited", centre=counsellor.postings.get().centre)
+    ev = AuditEvent.objects.get(verb="duty_changed", centre=counsellor.postings.get().centre)
     assert ev.data["duty"] == "on_break"
     assert ev.actor == users["ops_lead"] and ev.on_behalf_of == counsellor
 
@@ -74,3 +74,12 @@ def test_cq37_no_live_posting_today_is_a_clear_error(client_as, users):
     resp = client_as("ops_lead").post(f"{URL}?as_counsellor={c.id}", {"duty": "on_desk"}, format="json")
     assert resp.status_code == 400
     assert resp.json()["code"] == "no_live_posting"
+
+
+def test_cq37_counsellor_own_duty_change_is_audited_without_on_behalf_of(client_as, users, counsellor):
+    from apps.queue.models import AuditEvent
+
+    client_as("counsellor").post(URL, {"duty": "on_break"}, format="json")
+    ev = AuditEvent.objects.get(verb="duty_changed")
+    assert ev.actor == users["counsellor"] and ev.on_behalf_of is None
+    assert ev.data["duty"] == "on_break" and ev.data["from"] == "on_desk"

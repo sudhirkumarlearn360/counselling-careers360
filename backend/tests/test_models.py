@@ -268,5 +268,6 @@ def test_domain_enums_have_exact_values():
         "message_failed",
         "centre_live",
         "centre_closed",
+        "duty_changed",
         "exported",
     ]

@@ -187,6 +187,7 @@ class AuditEvent(models.Model):
         MESSAGE_FAILED = "message_failed"
         CENTRE_LIVE = "centre_live"
         CENTRE_CLOSED = "centre_closed"
+        DUTY_CHANGED = "duty_changed"
         EXPORTED = "exported"
 
     student = models.ForeignKey(

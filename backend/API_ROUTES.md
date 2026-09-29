@@ -9,6 +9,9 @@ Rules (summary):
 - One URL module per area (area = who calls it): `auth` → `apps/accounts/urls.py`, `public` → `apps/public/urls.py`, `ops` → `apps/ops/urls.py`, `hall` → `apps/hall/urls.py`, `desk` → `apps/desk/urls.py`, `webhooks` → `apps/messaging/urls.py`. All are included from `config/urls.py`.
 - GET reads, POST creates or runs an action, PATCH edits. No PUT or DELETE.
 - Responses: `{"data": ...}`; lists `{"data": [...], "count": n, "total": n}`; errors `{"code", "message", "data"}` with 400 / 401 / 403 / 404 / 409 / 429.
+- Warnings: successful writes may add `"warnings": [{"code", "message"}]` beside `data` (objects, not strings).
+- 409 `needs_confirmation`: allowed but must be confirmed. `data.waiting_count` (close) or `data.uncovered_streams` (go-live); repeat the request with `{"confirm": true}`.
+- Wrong-state actions (go-live when not planned, close when not live, edit a closed centre) are 400 with a `code` (`not_planned`, `not_live`, `centre_closed`).
 
 | Method | Path (prefix `/api/1/`) | Name | Who | Stories |
 |---|---|---|---|---|

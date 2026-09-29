@@ -25,7 +25,7 @@ CounselQueue runs Careers360's travelling counselling drives. Operations sets up
 - `SessionRecord`: student FK, counsellor FK, called_at, started_at, ended_at, outcome. One row is written on each `complete_session`, so a requeued `done` student keeps their earlier session. Session-length metrics, averages and exports read `SessionRecord` (CQ-21/38/60/61).
 - `TokenSequence`: (centre, last_number). Created together with the Centre. The number never goes backwards.
 - `Note`: student FK, text (non-empty), author_name, author counsellor FK, created_at. No delete.
-- `AuditEvent`: student FK (nullable for centre-level events), centre FK, verb (`checked_in|called|started|completed|missed|no_show|released|requeued|moved|pulled_forward|consent_given|edited|noted|rated|message_failed|centre_live|centre_closed|exported`), actor (StaffUser or null = student), `on_behalf_of` (Counsellor, set when an ops lead works a desk, CQ-5), at, data JSON.
+- `AuditEvent`: student FK (nullable for centre-level events), centre FK, verb (`checked_in|called|started|completed|missed|no_show|released|requeued|moved|pulled_forward|consent_given|edited|noted|rated|message_failed|centre_live|centre_closed|duty_changed|exported`), actor (StaffUser or null = student), `on_behalf_of` (Counsellor, set when an ops lead works a desk, CQ-5), at, data JSON.
 - `Message`: student FK, template, to, body, status `queued|sent|delivered|failed`, provider_id, created_at.
 
 ## Enums (exact)

@@ -117,7 +117,7 @@ def test_cq8_close_marks_waiting_not_counselled_not_no_show(client_as, centre, c
     )
     centre.refresh_from_db()
     assert centre.status == CentreStatus.CLOSED
-    ev = AuditEvent.objects.get(centre=centre, verb="centre_closed")
+    ev = AuditEvent.objects.get(centre=centre, verb="centre_closed", student__isnull=True)
     assert ev.actor == users["ops_lead"] and ev.data["not_counselled"] == 1
 
 
