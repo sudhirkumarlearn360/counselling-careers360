@@ -9,7 +9,7 @@ Queue and counselling-day system for Careers360 counselling drives: student QR s
 
 ## Stack
 - `backend/`: Django 4.2 LTS, DRF, MySQL 8, SimpleJWT, pytest-django.
-- `frontend/`: React 18.2 (`"react": "^18.2.0"`), Vite 5, TypeScript, React Router 6, TanStack Query (polling), RHF + Zod, Vitest.
+- `frontend/`: React 18.2 (`"react": "^18.2.0"`), Vite 5, Node 18.20.3 (`frontend/.nvmrc`), TypeScript, React Router 6, TanStack Query (polling), RHF + Zod, Vitest.
 - WhatsApp/OTP via a stub provider. No WebSockets.
 
 ## Kit

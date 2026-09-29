@@ -6,7 +6,9 @@ description: How the CounselQueue frontend is built — React 18.2 + Vite + Type
 # Frontend conventions (`frontend/`)
 
 ## Stack
-React 18.2, Vite 5, TypeScript (strict), React Router 6 (data routers, `createBrowserRouter`), TanStack Query 5, React Hook Form + Zod, plain CSS modules + `src/styles/tokens.css` (from counselqueue-ui-spec design tokens). Tests: Vitest, @testing-library/react 14, MSW 2 for API mocks. Node 20+.
+React 18.2, Vite 5, TypeScript (strict), React Router 6 (data routers, `createBrowserRouter`), TanStack Query 5, React Hook Form + Zod, plain CSS modules + `src/styles/tokens.css` (from counselqueue-ui-spec design tokens). Tests: Vitest, @testing-library/react 14, MSW 2 for API mocks.
+
+**Node 18.20.3** (pinned): `frontend/.nvmrc` = `18.20.3`, and `package.json` has `"engines": {"node": ">=18.20.3 <19"}`. Every npm/npx command runs under it: prefix shells with `export PATH="$HOME/.nvm/versions/node/v18.20.3/bin:$PATH"` (the default shell Node is 22). Choose only packages that support Node 18.
 
 `package.json` pins (do not upgrade React past 18):
 ```json
