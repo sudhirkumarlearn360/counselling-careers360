@@ -25,6 +25,10 @@ def students_qs(params):
     for key, field in (("counsellor", "counsellor_id"), ("centre", "centre_id")):
         if params.get(key):
             qs = qs.filter(**{field: params[key]})
+    if params.get("city"):
+        qs = qs.filter(centre__city__iexact=params["city"])
+    if params.get("venue"):
+        qs = qs.filter(centre__venue=params["venue"])
     if params.get("stream"):
         qs = qs.filter(stream=params["stream"])
     if params.get("status"):

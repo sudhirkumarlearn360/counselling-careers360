@@ -10,8 +10,13 @@ pytestmark = pytest.mark.django_db
 URL = "/api/1/ops/centres"
 
 
+_seq = iter(range(1, 10_000))
+
+
 def body(**over):
     data = {
+        "email": f"desk{next(_seq)}@careers360.com",
+        "password": "frontdesk-1",
         "city": "Indore",
         "venue": "Hotel Fortune",
         "date": (timezone.localdate() + dt.timedelta(days=3)).isoformat(),
@@ -83,3 +88,51 @@ def test_cq6_duplicate_city_and_date_is_allowed_with_warning(client_as):
     assert msgs == [f"A centre in Indore on {date} already exists — you can still save."]
     assert Centre.objects.filter(city="Indore").count() == 2
     assert len({c.slug for c in Centre.objects.filter(city="Indore")}) == 2
+
+
+def test_add_a_centre_creates_the_front_desk_login(client_as):
+    from apps.accounts.models import Role, StaffUser
+
+    resp = post(client_as, email="  Indore.Desk@Careers360.com ", password="frontdesk-1")
+    assert resp.status_code == 201, resp.content
+    d = resp.json()["data"]
+    assert d["front_desk_email"] == "indore.desk@careers360.com" and "password" not in str(d)
+    user = StaffUser.objects.get(email="indore.desk@careers360.com")
+    assert user.role == Role.RECEPTION and user.centre_id == d["id"] and user.check_password("frontdesk-1")
+    login = client_as("anonymous").post(
+        "/api/1/auth/login", {"email": "indore.desk@careers360.com", "password": "frontdesk-1"}, format="json"
+    )
+    assert login.status_code == 200 and login.json()["data"]["user"]["centre"]["id"] == d["id"]
+
+
+def test_add_a_centre_needs_a_valid_email_and_a_password(client_as, users):
+    cases = [
+        ({"email": "", "password": "frontdesk-1"}, "email", "Enter the front desk's email address."),
+        ({"email": "nope", "password": "frontdesk-1"}, "email", "Enter the front desk's email address."),
+        ({"email": "a@b.co", "password": "short"}, "password", "The password must be at least 8 characters."),
+        (
+            {"email": "desk@careers360.com", "password": "frontdesk-1"},
+            "email",
+            "That email already has an account.",
+        ),
+    ]
+    for over, field, message in cases:
+        resp = post(client_as, **over)
+        assert resp.status_code == 400, (over, resp.content)
+        assert (
+            resp.json()["data"]["fields"][field] == [message]
+            or resp.json()["data"]["fields"][field] == message
+        )
+    assert Centre.objects.count() == 0 or Centre.objects.filter(city="Indore").count() == 0
+
+
+def test_editing_a_centre_can_reset_the_front_desk_password(client_as):
+    created = post(client_as, email="indore.desk@careers360.com").json()["data"]
+    r = client_as("ops_lead").patch(f"{URL}/{created['id']}", {"password": "new-password-1"}, format="json")
+    assert r.status_code == 200, r.content
+    ok = client_as("anonymous").post(
+        "/api/1/auth/login",
+        {"email": "indore.desk@careers360.com", "password": "new-password-1"},
+        format="json",
+    )
+    assert ok.status_code == 200

@@ -193,3 +193,10 @@ def test_cq58_webhook_marks_failed_and_flags_the_student(client_as, centre, coun
 def test_webhook_is_disabled_without_a_secret(client_as):
     r = client_as("anonymous").post("/api/1/webhooks/messaging/status", {}, format="json")
     assert r.status_code == 403
+
+
+def test_cq59_centre_and_venue_filters_combine(client_as, records):
+    c = client_as("ops_lead")
+    assert c.get(f"{OPS}/students", {"city": "indore"}).json()["count"] == 1
+    assert c.get(f"{OPS}/students", {"city": "Gwalior", "venue": "Hotel Landmark"}).json()["count"] == 3
+    assert c.get(f"{OPS}/students", {"city": "Gwalior", "venue": "Nowhere"}).json()["count"] == 0

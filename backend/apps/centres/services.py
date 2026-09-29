@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from django.db import transaction
 
+from apps.accounts.models import Role, StaffUser, normalise_email
 from apps.centres.exceptions import CentreClosed, CentreInvalid, CentreNotLive, CentreNotPlanned
 from apps.centres.models import Centre, CentreStatus
 from apps.common.choices import Stream
 from apps.common.exceptions import NeedsConfirmation
+from apps.common.validators import valid_email
 from apps.common.warnings import warning
 from apps.queue.models import AuditEvent, Student, StudentStatus
 from apps.queue.services import close_centre
@@ -27,6 +29,35 @@ def _validate(values: dict) -> None:
             raise CentreInvalid(MISSING_MSG, data={"fields": {f: [MISSING_MSG]}})
     if values["closes_at"] <= values["opens_at"]:
         raise CentreInvalid(TIME_MSG, data={"fields": {"closes_at": [TIME_MSG]}})
+
+
+EMAIL_MSG = "Enter the front desk's email address."
+EMAIL_TAKEN_MSG = "That email already has an account."
+PASSWORD_MSG = "The password must be at least 8 characters."
+MIN_PASSWORD = 8
+
+
+def _validate_login(email, password, required: bool, exclude_user=None) -> None:
+    """The centre's front-desk login (Add a Centre). Both are needed to create; on edit each is optional."""
+    email, password = (email or "").strip(), password or ""
+    errors = {}
+    if required or email:
+        if not valid_email(email):
+            errors["email"] = [EMAIL_MSG]
+        elif (
+            StaffUser.objects.filter(email=normalise_email(email))
+            .exclude(pk=getattr(exclude_user, "pk", None))
+            .exists()
+        ):
+            errors["email"] = [EMAIL_TAKEN_MSG]
+    if (required or password) and len(password) < MIN_PASSWORD:
+        errors["password"] = [PASSWORD_MSG]
+    if errors:
+        raise CentreInvalid(next(iter(errors.values()))[0], data={"fields": errors})
+
+
+def front_desk_user(centre: Centre):
+    return StaffUser.objects.filter(role=Role.RECEPTION, centre=centre).order_by("id").first()
 
 
 def duplicate_warnings(city: str, date, exclude_pk=None) -> list:
@@ -51,9 +82,17 @@ def create_centre(values: dict, actor=None):
         "venue": (values.get("venue") or "").strip(),
     }
     _validate(values)
+    _validate_login(values.get("email"), values.get("password"), required=True)
     warnings = duplicate_warnings(values["city"], values["date"])
     centre = Centre.objects.create(
         **{k: v for k, v in values.items() if k in FIELDS}, status=CentreStatus.PLANNED
+    )
+    StaffUser.objects.create_user(
+        values["email"],
+        values["password"],
+        name=f"{centre.city} front desk",
+        role=Role.RECEPTION,
+        centre=centre,
     )
     return centre, warnings
 
@@ -68,6 +107,8 @@ def update_centre(centre: Centre, values: dict, actor=None):
     merged.update({k: v for k, v in values.items() if k in FIELDS})
     merged["city"], merged["venue"] = (merged["city"] or "").strip(), (merged["venue"] or "").strip()
     _validate(merged)
+    desk = front_desk_user(locked)
+    _validate_login(values.get("email"), values.get("password"), required=False, exclude_user=desk)
     warnings = []
     if (merged["city"].lower(), merged["date"]) != (locked.city.lower(), locked.date):
         warnings = duplicate_warnings(merged["city"], merged["date"], exclude_pk=locked.pk)
@@ -78,6 +119,17 @@ def update_centre(centre: Centre, values: dict, actor=None):
         locked.save(update_fields=[*changed, "updated_at"])
         AuditEvent.objects.create(
             centre=locked, verb=AuditEvent.Verb.EDITED, actor=actor, data={"fields": changed}
+        )
+    if values.get("email") or values.get("password"):  # change the front-desk login
+        if desk is None:
+            desk = StaffUser(name=f"{locked.city} front desk", role=Role.RECEPTION, centre=locked)
+        if values.get("email"):
+            desk.email = normalise_email(values["email"])
+        if values.get("password"):
+            desk.set_password(values["password"])
+        desk.save()
+        AuditEvent.objects.create(
+            centre=locked, verb=AuditEvent.Verb.EDITED, actor=actor, data={"fields": ["front_desk_login"]}
         )
     return locked, warnings
 

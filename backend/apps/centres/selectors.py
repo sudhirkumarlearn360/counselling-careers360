@@ -12,7 +12,7 @@ from apps.counsellors.models import Posting
 
 def centres_qs():
     return Centre.objects.prefetch_related(
-        Prefetch("postings", queryset=Posting.objects.select_related("counsellor"))
+        Prefetch("postings", queryset=Posting.objects.select_related("counsellor")), "staff"
     )
 
 
@@ -35,6 +35,7 @@ def centre_full_payload(centre: Centre) -> dict:
         "covered_streams": covered,
         "uncovered_streams": uncovered,
         "counsellor_count": len(centre.postings.all()),
+        "front_desk_email": next((u.email for u in centre.staff.all()), ""),  # never the password
     }
 
 
