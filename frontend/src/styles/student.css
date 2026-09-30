@@ -117,7 +117,7 @@
 }
 @media (min-width: 780px) {
   .landing { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .land-left { padding-block: 40px; }
+  .land-left { padding-block: 40px; position: sticky; top: 0; align-self: start; height: calc(100dvh - 44px); }
   .land-right { align-items: center; }
 }
 @media (min-width: 900px) {
@@ -125,3 +125,7 @@
   .stu-wrap.wide { max-width: 980px; }
   .token-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: start; }
 }
+
+/* The check-in form lives on the landing page itself (right panel, like the prototype). */
+.land-form { margin-bottom: 1.25rem; }
+.land-form .progress { margin-top: 0; }

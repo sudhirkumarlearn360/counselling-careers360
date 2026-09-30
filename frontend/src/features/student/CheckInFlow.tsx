@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useForm, type FieldPath } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { ZodTypeAny } from "zod";
@@ -26,8 +26,10 @@ function Progress({ step }: { step: number }) {
   );
 }
 
-export function CheckInFlow() {
-  const { centreSlug = "" } = useParams();
+/** The 4-step check-in. `embedded` puts it inside another page (the landing) instead of its own screen. */
+export function CheckInFlow({ embedded = false, slug }: { embedded?: boolean; slug?: string }) {
+  const params = useParams();
+  const centreSlug = slug ?? params.centreSlug ?? "";
   const nav = useNavigate();
   const { data: centre } = usePublicCentre(centreSlug);
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -128,7 +130,7 @@ export function CheckInFlow() {
     }
   }
 
-  if (centre && !centre.open)
+  if (centre && !centre.open && !embedded)
     return (
       <StudentShell>
         <div className="notice bad"><b>{centre.message}</b></div>
@@ -137,8 +139,9 @@ export function CheckInFlow() {
     );
 
   const err = (name: FieldPath<CheckInForm>) => (errors as Record<string, { message?: string }>)[name]?.message;
+  const Wrap = embedded ? Fragment : StudentShell;
   return (
-    <StudentShell>
+    <Wrap>
       <Progress step={step} />
 
       {step === 1 && (
@@ -280,6 +283,6 @@ export function CheckInFlow() {
           </p>
         </form>
       )}
-    </StudentShell>
+    </Wrap>
   );
 }

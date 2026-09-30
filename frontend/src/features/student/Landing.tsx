@@ -1,6 +1,7 @@
-import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
+import { Navigate, useParams, useSearchParams } from "react-router-dom";
 import { usePublicCentre } from "../../api/hooks";
 import { STREAMS, prettyDate } from "../../lib/format";
+import { CheckInFlow } from "./CheckInFlow";
 import { StudentShell } from "./StudentShell";
 import { savedToken } from "./schema";
 
@@ -54,22 +55,13 @@ export function Landing() {
         <section className="land-right">
           <div className="land-box">
             {data.open ? (
-              <div className="land-cta">
-                <span className="glyph" aria-hidden="true">📲</span>
-                <div>
-                  <div className="qt">Check in from your phone</div>
-                  <div className="qd">No app, no account. Opens the form instantly.</div>
-                </div>
+              <div className="land-form">
+                <CheckInFlow embedded slug={centreSlug} />
               </div>
             ) : (
               <div className="notice bad" role="status" style={{ marginBottom: "1rem" }}>
                 <b>{data.message}</b>
               </div>
-            )}
-            {data.open && (
-              <Link to={`/c/${centreSlug}/check-in`} className="cta" style={{ textDecoration: "none" }}>
-                Get my free counselling token 🎫
-              </Link>
             )}
 
             <section className="stu-card" style={{ marginTop: "1.25rem" }}>
