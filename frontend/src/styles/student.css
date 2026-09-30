@@ -2,8 +2,14 @@
    Mobile-first and fully responsive: one column below 600px, a centred card (max 560px) from 600px,
    a split hero landing from 780px, and a two-column token page from 900px. Tap targets >= 44px;
    type scales with clamp(); nothing uses a fixed width above 320px. */
-.stu { min-height: 100dvh; background: linear-gradient(160deg, var(--c360-cream) 0%, #fff 100%); color: var(--ink); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .stu { background: var(--c360-cream); } }
+.stu {
+  /* Student pages are always light (white form, white boxes) like the prototype, whatever the device theme. */
+  --card: #ffffff; --paper: #f4f8fd; --ink: #0f1f35; --muted: #5a6d85; --line: #dce6f2; --line-strong: #bfd0e4;
+  --sky: #e9f1fb; --navy: #12356b; --blue: #2b6cb8; --amber: #d98a16; --amber-soft: #fbefd9; --rose: #b3261e;
+  --rose-soft: #fbe7e5; --ok: #12795c; --ok-soft: #ddf1ea;
+  --c360-cream: #fffbf8; --c360-warm: #fff3ef; --c360-sel-bg: #fff0ec; --c360-step-line: #f5c6be;
+  color-scheme: light;
+  min-height: 100dvh; background: linear-gradient(160deg, var(--c360-cream) 0%, #fff 100%); color: var(--ink); }
 .stu-top { display: flex; align-items: center; gap: 10px; padding: 10px clamp(1rem, 4vw, 1.5rem); padding-top: calc(10px + env(safe-area-inset-top, 0px)); background: linear-gradient(90deg, #b03020 0%, #c0392b 40%, #d4500e 100%); color: #fff; }
 .stu-top .brand { font-family: var(--serif); font-size: clamp(1.125rem, 4.5vw, 1.25rem); }
 .stu-top .brand em { font-style: italic; opacity: 0.85; }
@@ -30,7 +36,6 @@
 .land-stat .l { font-size: 11.5px; opacity: 0.8; margin-top: 2px; }
 .land-quote { margin-top: 26px; padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.22); font-size: 13px; opacity: 0.85; line-height: 1.55; font-style: italic; }
 .land-right { background: linear-gradient(170deg, #fff2ee 0%, #fffaf8 30%, #fff 65%); display: flex; justify-content: center; padding: 28px clamp(1rem, 4vw, 2.5rem) calc(32px + env(safe-area-inset-bottom, 0px)); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .land-right { background: var(--c360-cream); } }
 .land-box { width: 100%; max-width: 400px; }
 .land-cta { display: flex; gap: 14px; align-items: center; background: var(--card); border: 2px dashed rgba(192, 57, 43, 0.28); border-radius: 16px; padding: 16px; margin-bottom: 18px; }
 .land-cta .qt { font-size: 13px; font-weight: 700; color: var(--c360-red); margin-bottom: 2px; }
@@ -167,7 +172,6 @@ details.more[open] summary { margin-bottom: 8px; }
 .land-right::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(circle, rgba(192, 57, 43, 0.12) 1px, transparent 1px); background-size: 24px 24px; -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, black 100%); mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, black 100%); }
 .land-box { position: relative; z-index: 1; }
 .land-qr { display: flex; gap: 16px; align-items: flex-start; background: #fff; border: 2px dashed rgba(192, 57, 43, 0.25); border-radius: 16px; padding: 16px; margin-bottom: 4px; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .land-qr { background: var(--card); } }
 .land-qr img, .land-qr .qr-ph { width: clamp(6.5rem, 34vw, 9.375rem); height: auto; aspect-ratio: 1; flex: none; border-radius: 8px; background: #fff; padding: 4px; }
 .land-qr .qt { font-size: 13px; font-weight: 700; color: var(--c360-red); margin-bottom: 4px; }
 .land-qr .qd { font-size: 12px; color: var(--muted); line-height: 1.5; }
