@@ -1,37 +1,44 @@
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, type FieldPath } from "react-hook-form";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { ZodTypeAny } from "zod";
 import { api, ApiError } from "../../api/client";
-import { usePublicCentre } from "../../api/hooks";
+import type { PublicCentre } from "../../api/types";
 import { Field } from "../../app/ui";
 import { CLARITY, CLASSES, EXAMS, HELP, STREAMS } from "../../lib/format";
 import { normaliseMobile } from "../../lib/mobile";
 import {
   DETAILS_FIELDS, EMPTY_FORM, GOALS_FIELDS, detailsSchema, goalsSchema, saveToken, toggleExam, type CheckInForm,
 } from "./schema";
+import { LandingView } from "./LandingView";
 import { StudentShell } from "./StudentShell";
 
 const STEPS = ["Details", "Goals", "Verify", "Token"] as const;
 
-function Progress({ step }: { step: number }) {
+/** The circle stepper that appears once the short form is submitted (prototype): Details ✓, Goals, Verify, Token. */
+function Stepper({ step }: { step: number }) {
   return (
-    <ol className="progress" aria-label="Progress">
-      {STEPS.map((label, i) => (
-        <li key={label} aria-current={i + 1 === step ? "step" : undefined} className={i + 1 < step ? "done" : ""}>
-          {i + 1}. {label}
-        </li>
-      ))}
+    <ol className="stepper" aria-label="Progress">
+      {STEPS.map((label, i) => {
+        const n = i + 1;
+        const state = n < step ? "done" : n === step ? "now" : "todo";
+        return (
+          <li key={label} className={state} aria-current={n === step ? "step" : undefined}>
+            <span className="dotc" aria-hidden="true">{state === "done" ? "✓" : n}</span>
+            <span className="lbl">{n}. {label}</span>
+          </li>
+        );
+      })}
     </ol>
   );
 }
 
-/** The 4-step check-in. `embedded` puts it inside another page (the landing) instead of its own screen. */
-export function CheckInFlow({ embedded = false, slug }: { embedded?: boolean; slug?: string }) {
-  const params = useParams();
-  const centreSlug = slug ?? params.centreSlug ?? "";
+/**
+ * The check-in. Step 1 is the short details form ON the landing page; once it is submitted the screen becomes a
+ * centred card with the progress stepper for Goals → Verify → Token (as in the prototype).
+ */
+export function CheckInFlow({ slug: centreSlug, data }: { slug: string; data: PublicCentre }) {
   const nav = useNavigate();
-  const { data: centre } = usePublicCentre(centreSlug);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const form = useForm<CheckInForm>({ defaultValues: EMPTY_FORM });
   const { register, watch, setValue, formState } = form;
@@ -130,74 +137,76 @@ export function CheckInFlow({ embedded = false, slug }: { embedded?: boolean; sl
     }
   }
 
-  if (centre && !centre.open && !embedded)
-    return (
-      <StudentShell>
-        <div className="notice bad"><b>{centre.message}</b></div>
-        <p><Link to={`/c/${centreSlug}?new=1`}>Back</Link></p>
-      </StudentShell>
-    );
-
   const err = (name: FieldPath<CheckInForm>) => (errors as Record<string, { message?: string }>)[name]?.message;
-  const Wrap = embedded ? Fragment : StudentShell;
+  const moreOpen = ["parent_mobile", "email", "klass"].some((f) => err(f as FieldPath<CheckInForm>));
+
+  const details = (
+    <form
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (validate(detailsSchema, DETAILS_FIELDS)) setStep(2);
+      }}
+    >
+      <h1 className="cform-title">Your details</h1>
+      <p className="cform-sub">One short screen — it takes a minute.</p>
+      <Field label="Your name" htmlFor="name" error={err("name")}>
+        <input id="name" className="input" placeholder="As on your marksheet" autoComplete="name" aria-invalid={!!err("name")} {...register("name")} />
+      </Field>
+      <Field label="School" htmlFor="school" error={err("school")}>
+        <input id="school" className="input" placeholder="School name and city" aria-invalid={!!err("school")} {...register("school")} />
+      </Field>
+      <Field label="Your mobile number" htmlFor="mobile" hint="Your token and turn alert arrive on WhatsApp." error={err("mobile")}>
+        <div className="phone-in">
+          <span className="pre">+91</span>
+          <input id="mobile" className="input" type="tel" inputMode="numeric" placeholder="10-digit number" autoComplete="tel" aria-invalid={!!err("mobile")} {...register("mobile")} />
+        </div>
+      </Field>
+      <Field label="Your stream" hint="The stream you pick decides which counsellor you're sent to." error={err("stream")}>
+        <div className="streamgrid" role="group" aria-label="Stream">
+          {STREAMS.map((s) => (
+            <button
+              type="button"
+              key={s.code}
+              className="streamchip"
+              aria-pressed={values.stream === s.code}
+              onClick={() => setValue("stream", s.code as never, { shouldValidate: false })}
+            >
+              {s.name}
+            </button>
+          ))}
+        </div>
+      </Field>
+      <details className="more" open={moreOpen}>
+        <summary>Add parent's number, email or class (optional)</summary>
+        <Field label="Parent's number (optional)" htmlFor="parent_mobile" error={err("parent_mobile")}>
+          <input id="parent_mobile" className="input" type="tel" inputMode="numeric" aria-invalid={!!err("parent_mobile")} {...register("parent_mobile")} />
+        </Field>
+        <Field label="Email (optional)" htmlFor="email" error={err("email")}>
+          <input id="email" className="input" type="email" inputMode="email" autoComplete="email" aria-invalid={!!err("email")} {...register("email")} />
+        </Field>
+        <Field label="Class" htmlFor="klass">
+          <select id="klass" className="select" {...register("klass")}>
+            <option value="">Select</option>
+            {CLASSES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+        </Field>
+      </details>
+      <button className="cta" type="submit">Get my free counselling token 🎫</button>
+      <p className="land-foot">🔒 Your details are private and used only for counselling.</p>
+    </form>
+  );
+
+  if (step === 1) return <LandingView data={data}>{details}</LandingView>;
+
   return (
-    <Wrap>
-      <Progress step={step} />
-
-      {step === 1 && (
-        <form
-          noValidate
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (validate(detailsSchema, DETAILS_FIELDS)) setStep(2);
-          }}
-        >
-          <h1 className="cform-title">Your details</h1>
-          <p className="cform-sub">One short screen — it takes a minute.</p>
-          <Field label="Your name" htmlFor="name" error={err("name")}>
-            <input id="name" className="input" autoComplete="name" aria-invalid={!!err("name")} {...register("name")} />
-          </Field>
-          <Field label="School" htmlFor="school" error={err("school")}>
-            <input id="school" className="input" aria-invalid={!!err("school")} {...register("school")} />
-          </Field>
-          <Field label="Your mobile number" htmlFor="mobile" hint="We'll send your token and turn alert on WhatsApp." error={err("mobile")}>
-            <input id="mobile" className="input" type="tel" inputMode="numeric" autoComplete="tel" aria-invalid={!!err("mobile")} {...register("mobile")} />
-          </Field>
-          <Field label="Parent's number (optional)" htmlFor="parent_mobile" error={err("parent_mobile")}>
-            <input id="parent_mobile" className="input" type="tel" inputMode="numeric" aria-invalid={!!err("parent_mobile")} {...register("parent_mobile")} />
-          </Field>
-          <Field label="Email (optional)" htmlFor="email" error={err("email")}>
-            <input id="email" className="input" type="email" inputMode="email" autoComplete="email" aria-invalid={!!err("email")} {...register("email")} />
-          </Field>
-          <Field label="Your stream" hint="The stream you pick decides which counsellor you're sent to." error={err("stream")}>
-            <div className="streamgrid" role="group" aria-label="Stream">
-              {STREAMS.map((s) => (
-                <button
-                  type="button"
-                  key={s.code}
-                  className="streamchip"
-                  aria-pressed={values.stream === s.code}
-                  onClick={() => setValue("stream", s.code as never, { shouldValidate: false })}
-                >
-                  {s.name}
-                </button>
-              ))}
-            </div>
-          </Field>
-          <Field label="Class" htmlFor="klass">
-            <select id="klass" className="select" {...register("klass")}>
-              <option value="">Select</option>
-              {CLASSES.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-          </Field>
-          <div className="row-actions">
-            <button className="cta" type="submit">Continue</button>
-          </div>
-        </form>
-      )}
-
+    <StudentShell>
+      <div className="phone">
+        <div className="bar">{step === 2 ? "Tell us what you need" : "Verify your number"}</div>
+        <div className="body">
+          <Stepper step={step} />
       {step === 2 && (
         <form noValidate onSubmit={goals}>
           <h1 className="cform-title">What do you need help with?</h1>
@@ -283,6 +292,8 @@ export function CheckInFlow({ embedded = false, slug }: { embedded?: boolean; sl
           </p>
         </form>
       )}
-    </Wrap>
+        </div>
+      </div>
+    </StudentShell>
   );
 }

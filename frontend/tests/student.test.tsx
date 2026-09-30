@@ -59,7 +59,7 @@ describe("CQ-15/16/17/18 check-in flow", () => {
     await userEvent.type(screen.getByLabelText("School"), "DPS Gwalior");
     await userEvent.type(screen.getByLabelText("Your mobile number"), "+91 98110 22001");
     await userEvent.click(screen.getByRole("button", { name: "Science – PCM" }));
-    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: /Get my free counselling token/ }));
   }
   async function fillGoals() {
     await userEvent.type(await screen.findByLabelText(/Course or career/), "B.Tech");
@@ -67,12 +67,27 @@ describe("CQ-15/16/17/18 check-in flow", () => {
     await userEvent.click(screen.getByRole("checkbox"));
   }
 
+  it("the landing page IS the form: no stepper on it; after submitting, the stepper Details ✓ · Goals · Verify · Token appears", async () => {
+    renderAt(`/c/${SLUG}?new=1`);
+    await userEvent.type(await screen.findByLabelText("Your name"), "Asha Rao");
+    expect(screen.queryByRole("list", { name: "Progress" })).toBeNull(); // nothing yet on the first form
+    await userEvent.type(screen.getByLabelText("School"), "DPS Gwalior");
+    await userEvent.type(screen.getByLabelText("Your mobile number"), "9811022001");
+    await userEvent.click(screen.getByRole("button", { name: "Science – PCM" }));
+    await userEvent.click(screen.getByRole("button", { name: /Get my free counselling token/ }));
+    const steps = await screen.findByRole("list", { name: "Progress" });
+    expect(within(steps).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["✓1. Details", "22. Goals", "33. Verify", "44. Token"]);
+    expect(within(steps).getByText("1. Details").closest("li")).toHaveClass("done");
+    expect(within(steps).getByText("2. Goals").closest("li")).toHaveAttribute("aria-current", "step");
+    expect(screen.queryByText("Your future college")).toBeNull(); // the screen became the centred card
+  });
+
   it("reports every failing details field together and keeps what was typed", async () => {
-    renderAt(`/c/${SLUG}/check-in`);
+    renderAt(`/c/${SLUG}?new=1`);
     await userEvent.type(await screen.findByLabelText("Your name"), "Al");
     await userEvent.type(screen.getByLabelText("Your mobile number"), "12345");
     await userEvent.type(screen.getByLabelText("Email (optional)"), "nope");
-    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: /Get my free counselling token/ }));
     expect(await screen.findByText("Enter your name (at least 3 letters).")).toBeInTheDocument();
     expect(screen.getByText("Enter your school.")).toBeInTheDocument();
     expect(screen.getByText("A 10-digit mobile number is needed for the turn alert.")).toBeInTheDocument();
@@ -84,7 +99,7 @@ describe("CQ-15/16/17/18 check-in flow", () => {
   });
 
   it("goals need a course, a help choice and an unticked-by-default consent; 'None' clears the other exams", async () => {
-    renderAt(`/c/${SLUG}/check-in`);
+    renderAt(`/c/${SLUG}?new=1`);
     await fillDetails();
     expect(await screen.findByRole("checkbox")).not.toBeChecked();
     await userEvent.click(screen.getByRole("button", { name: "JEE" }));
@@ -110,7 +125,7 @@ describe("CQ-15/16/17/18 check-in flow", () => {
       http.post(`${API}/public/centres/${SLUG}/check-in`, async ({ request }) => { checkins.push(await request.json()); return ok({ access_key: "key123", token: {} }); }),
       http.get(`${API}/public/tokens/key123`, () => ok(tokenView({ kind: "waiting", ahead: 2, minutes: 34, expected_at: "11:20", approximate: true }))),
     );
-    renderAt(`/c/${SLUG}/check-in`);
+    renderAt(`/c/${SLUG}?new=1`);
     await fillDetails();
     await fillGoals();
     await userEvent.click(screen.getByRole("button", { name: "Send my code" }));
@@ -125,7 +140,7 @@ describe("CQ-15/16/17/18 check-in flow", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "← Change number" }));
     expect(await screen.findByLabelText("Your name")).toHaveValue("Asha Rao"); // every answer kept
-    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
+    await userEvent.click(screen.getByRole("button", { name: /Get my free counselling token/ }));
     expect(await screen.findByLabelText(/Course or career/)).toHaveValue("B.Tech");
     expect(screen.getByRole("checkbox")).toBeChecked();
     await userEvent.click(screen.getByRole("button", { name: "Send my code" }));
@@ -144,7 +159,7 @@ describe("CQ-15/16/17/18 check-in flow", () => {
       http.post(`${API}/public/centres/${SLUG}/check-in`, () =>
         fail(409, "duplicate_token", "A token is already open for this number — PCM-07.", { access_key: "dupkey", token: "PCM-07" })),
     );
-    renderAt(`/c/${SLUG}/check-in`);
+    renderAt(`/c/${SLUG}?new=1`);
     await fillDetails();
     await fillGoals();
     await userEvent.click(screen.getByRole("button", { name: "Send my code" }));
@@ -161,7 +176,7 @@ describe("CQ-15/16/17/18 check-in flow", () => {
       http.post(`${API}/public/centres/${SLUG}/check-in`, () =>
         fail(400, "invalid", "That email doesn't look right.", { fields: { email: "That email doesn't look right." } })),
     );
-    renderAt(`/c/${SLUG}/check-in`);
+    renderAt(`/c/${SLUG}?new=1`);
     await fillDetails();
     await fillGoals();
     await userEvent.click(screen.getByRole("button", { name: "Send my code" }));

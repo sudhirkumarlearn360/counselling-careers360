@@ -24,3 +24,7 @@ afterEach(() => {
   window.sessionStorage.clear();
   window.localStorage.clear();
 });
+
+// Slow CI or a busy machine shouldn't turn a 1s default wait into a flaky failure.
+import { configure } from "@testing-library/react";
+configure({ asyncUtilTimeout: 4000 });

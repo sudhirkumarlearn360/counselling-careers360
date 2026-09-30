@@ -129,3 +129,24 @@
 /* The check-in form lives on the landing page itself (right panel, like the prototype). */
 .land-form { margin-bottom: 1.25rem; }
 .land-form .progress { margin-top: 0; }
+
+/* --- Short form on the landing page --- */
+.phone-in { display: flex; gap: 8px; align-items: center; }
+.phone-in .pre { font-size: 14px; font-weight: 600; white-space: nowrap; }
+details.more { margin: 4px 0 14px; border: 1.5px dashed var(--c360-step-line); border-radius: 10px; padding: 8px 12px; }
+details.more summary { cursor: pointer; font-size: 13px; color: var(--c360-red); font-weight: 600; min-height: 32px; display: flex; align-items: center; }
+details.more[open] summary { margin-bottom: 8px; }
+.land-form .cta { margin-top: 8px; }
+
+/* --- Centred card + circle stepper (Goals -> Verify -> Token) --- */
+.phone { width: 100%; max-width: 412px; margin-inline: auto; background: var(--card); border: 1px solid var(--line); border-radius: 26px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 16px 40px rgba(204, 0, 0, 0.08); overflow: hidden; }
+.phone .bar { background: var(--c360-red); color: #fff; padding: 12px 18px; font-size: 13px; }
+.phone .body { padding: 18px clamp(1rem, 4vw, 1.125rem) 26px; }
+.stepper { list-style: none; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); position: relative; }
+.stepper::before { content: ""; position: absolute; left: 12%; right: 12%; top: 14px; height: 2px; background: var(--c360-step-line); z-index: 0; }
+.stepper li { display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; z-index: 1; text-align: center; }
+.stepper .dotc { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--card); border: 2px solid var(--c360-step-line); color: var(--muted); }
+.stepper .lbl { font-size: 11px; color: var(--muted); }
+.stepper li.done .dotc { background: var(--c360-red); border-color: var(--c360-red); color: #fff; }
+.stepper li.done .lbl, .stepper li.now .lbl { color: var(--c360-red); font-weight: 600; }
+.stepper li.now .dotc { border-color: var(--c360-red); color: var(--c360-red); }

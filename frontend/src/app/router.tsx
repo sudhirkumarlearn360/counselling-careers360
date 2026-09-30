@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Navigate, createBrowserRouter, type RouteObject } from "react-router-dom";
+import { Navigate, createBrowserRouter, useParams, type RouteObject } from "react-router-dom";
 import { useAuth } from "../api/auth";
 import { defaultPath } from "../lib/nav";
 import { RequireRole } from "./RequireRole";
@@ -7,6 +7,11 @@ import { RequireRole } from "./RequireRole";
 function ConsoleIndex() {
   const { user } = useAuth();
   return <Navigate to={user ? defaultPath(user.role) : "/console/login"} replace />;
+}
+
+function RedirectToLanding() {
+  const { centreSlug } = useParams();
+  return <Navigate to={`/c/${centreSlug}?new=1`} replace />;
 }
 
 function NotFound() {
@@ -37,7 +42,7 @@ function Loading() {
 const appRoutes: RouteObject[] = [
   { path: "/", element: <Navigate to="/console" replace /> },
   { path: "/c/:centreSlug", ...lazyNamed(() => import("../features/student/Landing"), "Landing") },
-  { path: "/c/:centreSlug/check-in", ...lazyNamed(() => import("../features/student/CheckInFlow"), "CheckInFlow") },
+  { path: "/c/:centreSlug/check-in", element: <RedirectToLanding /> }, // the landing page is the check-in
   { path: "/t/:accessKey", ...lazyNamed(() => import("../features/student/TokenPage"), "TokenPage") },
   { path: "/board/:centreSlug", ...lazyNamed(() => import("../features/board/HallBoard"), "HallBoard") },
   { path: "/console/login", ...lazyNamed(() => import("../features/auth/SignIn"), "SignIn") },
