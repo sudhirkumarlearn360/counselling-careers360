@@ -6,18 +6,19 @@ import { normaliseMobile, validEmail, validMobile } from "../src/lib/mobile";
 import { toggleExam } from "../src/features/student/schema";
 import { detailsSchema, goalsSchema } from "../src/features/student/schema";
 
-describe("normaliseMobile (same fixtures as the backend)", () => {
-  it.each([
-    ["+91 98110 22001", "9811022001"],
-    ["098110 22001", "9811022001"],
-    ["98110-22001", "9811022001"],
-    ["9811022001", "9811022001"],
-  ])("%s -> %s", (raw, expected) => expect(normaliseMobile(raw)).toBe(expected));
+const CASES = JSON.parse(readFileSync(resolve(__dirname, "../../shared/mobile_cases.json"), "utf8")) as {
+  valid: [string, string][];
+  invalid: string[];
+};
 
-  it("CQ-15 accepts exactly ten digits", () => {
-    expect(validMobile("98110 22001")).toBe(true);
-    expect(validMobile("12345")).toBe(false);
-    expect(validMobile("98110220011")).toBe(false);
+describe("normaliseMobile (same shared fixtures as the backend)", () => {
+  it.each(CASES.valid)("%s -> %s", (raw, expected) => {
+    expect(normaliseMobile(raw)).toBe(expected);
+    expect(validMobile(raw)).toBe(true);
+  });
+  it.each(CASES.invalid)("%j is not a mobile number", (raw) => expect(validMobile(raw)).toBe(false));
+
+  it("CQ-15 email format", () => {
     expect(validEmail("a@b.co")).toBe(true);
     expect(validEmail("nope")).toBe(false);
   });

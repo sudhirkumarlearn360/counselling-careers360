@@ -94,8 +94,26 @@ export function CheckInFlow({ slug: centreSlug, data }: { slug: string; data: Pu
     }
   }
 
-  async function goals(e: React.FormEvent) {
+  /** On leaving a phone box, show it as the clean 10 digits (+91, 0 and spaces removed). */
+  const tidyMobile = (name: "mobile" | "parent_mobile") => () => {
+    const raw = form.getValues(name);
+    const clean = normaliseMobile(raw);
+    if (raw && clean && clean !== raw) setValue(name, clean);
+  };
+
+  /** Browser autofill can put a value in a box without a change event; take what is actually in the form. */
+  function syncFromDom(formEl: HTMLFormElement) {
+    for (const name of ["name", "school", "mobile", "parent_mobile", "email", "klass", "course"] as const) {
+      const el = formEl.elements.namedItem(name);
+      if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement) {
+        if (el.value !== form.getValues(name)) setValue(name, el.value);
+      }
+    }
+  }
+
+  async function goals(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    syncFromDom(e.currentTarget);
     if (validate(goalsSchema, GOALS_FIELDS)) await sendCode();
   }
 
@@ -145,6 +163,7 @@ export function CheckInFlow({ slug: centreSlug, data }: { slug: string; data: Pu
       noValidate
       onSubmit={(e) => {
         e.preventDefault();
+        syncFromDom(e.currentTarget);
         if (validate(detailsSchema, DETAILS_FIELDS)) setStep(2);
       }}
     >
@@ -154,12 +173,12 @@ export function CheckInFlow({ slug: centreSlug, data }: { slug: string; data: Pu
         <input id="name" className="input" placeholder="As on your marksheet" autoComplete="name" aria-invalid={!!err("name")} {...register("name")} />
       </Field>
       <Field label="School" htmlFor="school" error={err("school")}>
-        <input id="school" className="input" placeholder="School name and city" aria-invalid={!!err("school")} {...register("school")} />
+        <input id="school" className="input" placeholder="School name and city" autoComplete="off" aria-invalid={!!err("school")} {...register("school")} />
       </Field>
       <Field label="Your mobile number" htmlFor="mobile" hint="Your token and turn alert arrive on WhatsApp." error={err("mobile")}>
         <div className="phone-in">
           <span className="pre">+91</span>
-          <input id="mobile" className="input" type="tel" inputMode="numeric" placeholder="10-digit number" autoComplete="tel" aria-invalid={!!err("mobile")} {...register("mobile")} />
+          <input id="mobile" className="input" type="tel" inputMode="numeric" placeholder="10-digit number" autoComplete="tel-national" aria-invalid={!!err("mobile")} {...register("mobile", { onBlur: tidyMobile("mobile") })} />
         </div>
       </Field>
       <Field label="Your stream" hint="The stream you pick decides which counsellor you're sent to." error={err("stream")}>
@@ -180,13 +199,13 @@ export function CheckInFlow({ slug: centreSlug, data }: { slug: string; data: Pu
       <details className="more" open={moreOpen}>
         <summary>Add parent's number, email or class (optional)</summary>
         <Field label="Parent's number (optional)" htmlFor="parent_mobile" error={err("parent_mobile")}>
-          <input id="parent_mobile" className="input" type="tel" inputMode="numeric" aria-invalid={!!err("parent_mobile")} {...register("parent_mobile")} />
+          <input id="parent_mobile" className="input" type="tel" inputMode="numeric" autoComplete="off" aria-invalid={!!err("parent_mobile")} {...register("parent_mobile", { onBlur: tidyMobile("parent_mobile") })} />
         </Field>
         <Field label="Email (optional)" htmlFor="email" error={err("email")}>
           <input id="email" className="input" type="email" inputMode="email" autoComplete="email" aria-invalid={!!err("email")} {...register("email")} />
         </Field>
         <Field label="Class" htmlFor="klass">
-          <select id="klass" className="select" {...register("klass")}>
+          <select id="klass" className="select" autoComplete="off" {...register("klass")}>
             <option value="">Select</option>
             {CLASSES.map((c) => (
               <option key={c}>{c}</option>

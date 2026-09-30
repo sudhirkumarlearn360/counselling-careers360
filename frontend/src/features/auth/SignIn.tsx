@@ -20,9 +20,13 @@ export function SignIn() {
 
   if (ready && user) return <Navigate to={defaultPath(user.role)} replace />;
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+    // A password manager can fill the boxes without a change event, so read the form itself.
+    const data = new FormData(e.currentTarget);
+    const email = String(data.get("email") ?? "");
+    const password = String(data.get("password") ?? "");
     if (!email.trim() || !password) return setError(BLANK);
     setBusy(true);
     try {
@@ -59,12 +63,12 @@ export function SignIn() {
           <p className="muted" style={{ marginTop: 0 }}>Use your Careers360 work account.</p>
           <div className="field">
             <label htmlFor="email">Work email</label>
-            <input id="email" className="input" type="email" placeholder="name@careers360.com" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input id="email" name="email" className="input" type="email" placeholder="name@careers360.com" autoComplete="username" autoCapitalize="none" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div className="field">
             <label htmlFor="password">Password</label>
             <div className="pw">
-              <input id="password" className="input" type={show ? "text" : "password"} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input id="password" name="password" className="input" type={show ? "text" : "password"} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
               <button type="button" aria-pressed={show} onClick={() => setShow((s) => !s)}>{show ? "Hide" : "Show"}</button>
             </div>
           </div>

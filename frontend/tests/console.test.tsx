@@ -141,7 +141,7 @@ describe("CQ-5 ops lead opens a desk", () => {
     expect(banner).toHaveTextContent("Anything you do here is recorded against that counsellor.");
     await userEvent.click(within(banner).getByRole("button", { name: "Back to live centres" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/console/live"));
-    expect(screen.queryByText(/Viewing Meera Iyer/)).toBeNull();
+    await waitFor(() => expect(screen.queryByText(/Viewing Meera Iyer/)).toBeNull());
   });
 
   it("a counsellor is sent back to their own screen if they try to open a desk", async () => {

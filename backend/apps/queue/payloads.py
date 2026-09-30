@@ -18,6 +18,7 @@ from apps.common.choices import (
     Exam,  # noqa: F401  (kept for callers that import from here)
     Stream,
 )
+from apps.common.validators import normalise_mobile, valid_mobile
 from apps.counsellors.models import Duty, Posting
 from apps.messaging.models import Message
 from apps.queue.models import (
@@ -236,7 +237,13 @@ def _row(s, desks, failed, now) -> dict:
 
 def search_filter(qs, q: str):
     q = (q or "").strip()
-    return qs.filter(Q(name__icontains=q) | Q(mobile__icontains=q) | Q(token__icontains=q)) if q else qs
+    if not q:
+        return qs
+    cond = Q(name__icontains=q) | Q(mobile__icontains=q) | Q(token__icontains=q)
+    number = normalise_mobile(q)
+    if valid_mobile(number) and number != q:  # "+91 98110 22001" finds 9811022001
+        cond |= Q(mobile=number)
+    return qs.filter(cond)
 
 
 def hall_payload(centre, q: str = "", counsellor_id=None, now=None) -> dict:

@@ -7,6 +7,7 @@ from collections import Counter
 from django.db.models import Avg, Count, Q
 
 from apps.common.choices import Clarity, Help, Outcome, Stream
+from apps.common.validators import normalise_mobile, valid_mobile
 from apps.queue.models import SessionRecord, Student, StudentStatus
 from apps.queue.services import metrics
 
@@ -21,7 +22,11 @@ def students_qs(params):
     qs = Student.objects.select_related("centre", "counsellor")
     q = (params.get("q") or "").strip()
     if q:
-        qs = qs.filter(Q(name__icontains=q) | Q(mobile__icontains=q) | Q(token__icontains=q))
+        cond = Q(name__icontains=q) | Q(mobile__icontains=q) | Q(token__icontains=q)
+        number = normalise_mobile(q)
+        if valid_mobile(number) and number != q:  # a full number typed with +91 / 0 / spaces
+            cond |= Q(mobile=number)
+        qs = qs.filter(cond)
     for key, field in (("counsellor", "counsellor_id"), ("centre", "centre_id")):
         if params.get(key):
             qs = qs.filter(**{field: params[key]})

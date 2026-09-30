@@ -9,6 +9,22 @@ describe("CQ-1 sign in", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Enter your work email and password");
   });
 
+  it("password managers: fields are named and typed for autofill, and values filled without events still sign in", async () => {
+    let body: any = null;
+    server.use(http.post(`${API}/auth/login`, async ({ request }) => { body = await request.json(); return fail(400, "invalid_credentials", "That email and password don't match an account.", { failed_attempts: 1 }); }));
+    renderAt("/console/login");
+    const email = (await screen.findByLabelText("Work email")) as HTMLInputElement;
+    const password = screen.getByLabelText("Password") as HTMLInputElement;
+    expect(email).toHaveAttribute("autocomplete", "username");
+    expect(email).toHaveAttribute("name", "email");
+    expect(password).toHaveAttribute("autocomplete", "current-password");
+    expect(password).toHaveAttribute("name", "password");
+    email.value = "meera@careers360.com"; // set the way a browser fills it: no change event
+    password.value = "desk123";
+    await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    await waitFor(() => expect(body).toEqual({ email: "meera@careers360.com", password: "desk123" }));
+  });
+
   it("the password is hidden by default and can be shown", async () => {
     renderAt("/console/login");
     const pw = await screen.findByLabelText("Password");
@@ -78,7 +94,7 @@ describe("CQ-3 / CQ-4 role guard and sign out", () => {
     await waitFor(() => expect(router.state.location.pathname).toBe("/console/hall"));
     expect(screen.queryByRole("link", { name: "Insights" })).toBeNull();
     expect(screen.queryByRole("link", { name: "All students" })).toBeNull();
-    expect(screen.getByRole("link", { name: "Add a student" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Add a student" })).toBeInTheDocument();
   });
 
   it("sign out is on every screen, clears the session and can't be undone with back", async () => {

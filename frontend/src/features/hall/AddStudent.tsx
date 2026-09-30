@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api, ApiError } from "../../api/client";
 import { useHall } from "../../api/hooks";
 import { Field, errText, useToast } from "../../app/ui";
+import { normaliseMobile } from "../../lib/mobile";
 import { CLARITY, CLASSES, EXAMS, HELP, STREAMS } from "../../lib/format";
 import { toggleExam } from "../student/schema";
 import { useHallCentre } from "./useHallCentre";
@@ -69,10 +70,10 @@ export function AddStudent() {
               <input id="a-school" className="input" placeholder="School name and city" value={f.school} onChange={(e) => set("school", e.target.value)} />
             </Field>
             <Field label="Mobile" htmlFor="a-mobile" error={errors.mobile}>
-              <input id="a-mobile" className="input" inputMode="numeric" placeholder="10 digits" value={f.mobile} onChange={(e) => set("mobile", e.target.value)} />
+              <input id="a-mobile" className="input" inputMode="numeric" placeholder="10 digits" value={f.mobile} onChange={(e) => set("mobile", e.target.value)} onBlur={() => f.mobile && set("mobile", normaliseMobile(f.mobile))} />
             </Field>
             <Field label="Parent's contact" htmlFor="a-parent" error={errors.parent_mobile}>
-              <input id="a-parent" className="input" inputMode="numeric" placeholder="Optional" value={f.parent_mobile} onChange={(e) => set("parent_mobile", e.target.value)} />
+              <input id="a-parent" className="input" inputMode="numeric" placeholder="Optional" value={f.parent_mobile} onChange={(e) => set("parent_mobile", e.target.value)} onBlur={() => f.parent_mobile && set("parent_mobile", normaliseMobile(f.parent_mobile))} />
             </Field>
             <Field label="Email" htmlFor="a-email" error={errors.email}>
               <input id="a-email" className="input" placeholder="you@example.com" value={f.email} onChange={(e) => set("email", e.target.value)} />

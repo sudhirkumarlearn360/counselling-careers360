@@ -67,6 +67,53 @@ describe("CQ-15/16/17/18 check-in flow", () => {
     await userEvent.click(screen.getByRole("checkbox"));
   }
 
+  it("autofill hints: name, national phone and email are recognised; the parent's box is never auto-filled with the student's own", async () => {
+    renderAt(`/c/${SLUG}?new=1`);
+    expect(await screen.findByLabelText("Your name")).toHaveAttribute("autocomplete", "name");
+    expect(screen.getByLabelText("Your mobile number")).toHaveAttribute("autocomplete", "tel-national");
+    expect(screen.getByLabelText("Your mobile number")).toHaveAttribute("name", "mobile");
+    expect(screen.getByLabelText("Email (optional)")).toHaveAttribute("autocomplete", "email");
+    expect(screen.getByLabelText("Parent's number (optional)")).toHaveAttribute("autocomplete", "off");
+    expect(screen.getByLabelText("School")).toHaveAttribute("autocomplete", "off");
+  });
+
+  it("browser autofill that sets the boxes WITHOUT firing change events still submits correctly", async () => {
+    renderAt(`/c/${SLUG}?new=1`);
+    const name = (await screen.findByLabelText("Your name")) as HTMLInputElement;
+    // What a browser does when it fills a saved profile: assign the value, no React event.
+    name.value = "Asha Rao";
+    (screen.getByLabelText("School") as HTMLInputElement).value = "DPS Gwalior";
+    (screen.getByLabelText("Your mobile number") as HTMLInputElement).value = "+91 98110 22001";
+    await userEvent.click(screen.getByRole("button", { name: "Science – PCM" }));
+    await userEvent.click(screen.getByRole("button", { name: /Get my free counselling token/ }));
+    expect(await screen.findByRole("list", { name: "Progress" })).toBeInTheDocument(); // no validation errors
+    expect(screen.queryByText("Enter your name (at least 3 letters).")).toBeNull();
+  });
+
+  it.each([["+91 98110 22001"], ["09811022001"], ["919811022001"], ["0091-98110-22001"], ["(98110) 22001"], ["9811022001"]])(
+    "the number %s is accepted and shown as the clean 10 digits when you leave the box",
+    async (typed) => {
+      renderAt(`/c/${SLUG}?new=1`);
+      const mobile = (await screen.findByLabelText("Your mobile number")) as HTMLInputElement;
+      await userEvent.type(mobile, typed);
+      await userEvent.tab();
+      expect(mobile).toHaveValue("9811022001");
+    },
+  );
+
+  it("the number sent to the server is always the 10 digits", async () => {
+    const sent: any[] = [];
+    server.use(
+      http.post(`${API}/public/centres/${SLUG}/otp/send`, async ({ request }) => { sent.push(await request.json()); return ok({ resend_after_sec: 30, expires_in_min: 10 }); }),
+    );
+    renderAt(`/c/${SLUG}?new=1`);
+    await fillDetails();
+    await fillGoals();
+    await userEvent.click(screen.getByRole("button", { name: "Send my code" }));
+    await screen.findByLabelText("Your code");
+    expect(sent[0]).toEqual({ mobile: "9811022001" });
+  });
+
   it("the landing page IS the form: no stepper on it; after submitting, the stepper Details ✓ · Goals · Verify · Token appears", async () => {
     renderAt(`/c/${SLUG}?new=1`);
     await userEvent.type(await screen.findByLabelText("Your name"), "Asha Rao");
