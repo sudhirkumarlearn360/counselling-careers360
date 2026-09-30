@@ -122,7 +122,8 @@
 }
 @media (min-width: 780px) {
   .landing { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .land-left { padding-block: 40px; position: sticky; top: 0; align-self: start; height: calc(100dvh - 44px); }
+  .land-left { padding-block: 40px; position: sticky; top: 0; align-self: start; height: 100dvh; }
+  .landing { min-height: 100dvh; } /* left panel fills the viewport while it sticks: no white strip under it */
   .land-right { align-items: center; }
 }
 @media (min-width: 900px) {

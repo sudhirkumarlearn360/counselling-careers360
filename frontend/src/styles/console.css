@@ -134,7 +134,16 @@ select.sel-move { width: 9.5rem; min-height: 32px; padding: 5px 9px; font-size: 
 }
 
 /* Student check-in link */
-.studentlink .url { font-weight: 400; font-size: 13px; overflow-wrap: anywhere; user-select: all; }
+.linktip { position: relative; }
+.linktip::after { content: attr(data-url); position: absolute; bottom: calc(100% + 6px); right: 0; background: #1f2430; color: #fff; font-size: 12px; font-weight: 400; padding: 5px 9px; border-radius: 6px; white-space: nowrap; max-width: 80vw; overflow: hidden; text-overflow: ellipsis; opacity: 0; pointer-events: none; transition: opacity .12s; z-index: 20; }
+.linktip:hover::after, .linktip:focus-visible::after { opacity: 1; }
 .studentlink b { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 .studentlink.compact { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-m); padding: 8px 12px; margin-bottom: 14px; font-size: 13.5px; }
 .studentlink.compact > span:first-child { color: var(--muted); }
+
+/* Stream chips in the console dialogs (student.css is not loaded here) */
+.dialog .chips, .modal .chips, .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips .chip { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 13.5px; cursor: pointer; }
+.chips .chip:hover { background: var(--sky); }
+.chips .chip[aria-pressed="true"] { background: var(--sky); border-color: var(--ink); font-weight: 600; }
+.chips .chip[aria-pressed="true"]::before { content: "✓ "; }

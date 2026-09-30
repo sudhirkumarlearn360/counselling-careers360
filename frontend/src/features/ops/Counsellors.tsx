@@ -93,7 +93,7 @@ export function Counsellors() {
               {centres.filter((c) => c.status !== "closed").map((c) => <option key={c.id} value={c.id}>{c.city} · {prettyDate(c.date)}</option>)}
             </select>
           </Field>
-          <Field label="Desk" htmlFor="k-desk"><input id="k-desk" className="input" placeholder="Desk 1" value={f.desk_label} onChange={(e) => setF({ ...f, desk_label: e.target.value })} /></Field>
+          <Field label={f.centre_id ? "Desk (required with a centre)" : "Desk"} htmlFor="k-desk"><input id="k-desk" className="input" placeholder="Desk 1" value={f.desk_label} onChange={(e) => setF({ ...f, desk_label: e.target.value })} /></Field>
           <div className="actions"><button className="btn" onClick={() => setOpen(false)}>Cancel</button><button className="btn primary" onClick={save}>Save</button></div>
         </Dialog>
       )}

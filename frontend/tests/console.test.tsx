@@ -422,12 +422,14 @@ describe("Add a Centre and All Students (agreed scope)", () => {
 
 describe("Student check-in link in the CMS (every user, every centre)", () => {
   const URL_ = "http://localhost:5173/c/gwalior-2026-09-29";
-  const expectLink = (name = /Open student page/) => {
+  const expectLink = (name = /^Open Link/) => {
     const a = screen.getByRole("link", { name });
     expect(a).toHaveAttribute("href", URL_);
     expect(a).toHaveAttribute("target", "_blank"); // opens in a new tab
     expect(a).toHaveAttribute("rel", expect.stringContaining("noopener"));
-    expect(screen.getAllByText(URL_).length).toBeGreaterThan(0);
+    expect(a).toHaveTextContent("Open Link");
+    expect(a).toHaveAttribute("data-url", URL_); // full link only as the hover tooltip
+    expect(screen.queryByText(URL_)).toBeNull(); // never printed on the page
   };
 
   it("front desk: on the Hall queue", async () => {
@@ -442,7 +444,7 @@ describe("Student check-in link in the CMS (every user, every centre)", () => {
     signInAs("reception");
     server.use(http.get(`${API}/hall/centres/1/queue`, () => ok(hall())));
     renderAt("/console/add");
-    await screen.findByRole("link", { name: /Open student page/ });
+    await screen.findByRole("link", { name: /^Open Link/ });
     expectLink();
   });
 
