@@ -1,18 +1,29 @@
 ---
 name: react-frontend-conventions
-description: How the CounselQueue frontend is built — React 19 + Vite + TypeScript, routes for student flow, token page, staff console and hall board, TanStack Query polling, React Hook Form + Zod mirroring backend validation, role-gated navigation, design tokens, and Vitest + Testing Library tests per acceptance criterion. Load before writing or reviewing any code under frontend/.
+description: How the CounselQueue frontend is built — React 18.2 + Vite + TypeScript, routes for student flow, token page, staff console and hall board, TanStack Query polling, React Hook Form + Zod mirroring backend validation, role-gated navigation, design tokens, and Vitest + Testing Library tests per acceptance criterion. Load before writing or reviewing any code under frontend/.
 ---
 
 # Frontend conventions (`frontend/`)
 
 ## Stack
-React 19, Vite, TypeScript (strict), React Router 7 (data routers), TanStack Query 5, React Hook Form + Zod, plain CSS modules + `src/styles/tokens.css` (from counselqueue-ui-spec design tokens). Tests: Vitest, @testing-library/react, MSW for API mocks. Node 20+.
+React 18.2, Vite 5, TypeScript (strict), React Router 6 (data routers, `createBrowserRouter`), TanStack Query 5, React Hook Form + Zod, plain CSS modules + `src/styles/tokens.css` (from counselqueue-ui-spec design tokens). Tests: Vitest, @testing-library/react 14, MSW 2 for API mocks.
+
+**Node 18.20.3** (pinned): `frontend/.nvmrc` = `18.20.3`, and `package.json` has `"engines": {"node": ">=18.20.3 <19"}`. Every npm/npx command runs under it: prefix shells with `export PATH="$HOME/.nvm/versions/node/v18.20.3/bin:$PATH"` (the default shell Node is 22). Choose only packages that support Node 18.
+
+`package.json` pins (do not upgrade React past 18):
+```json
+"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.26.0",
+"@tanstack/react-query": "^5.51.0", "react-hook-form": "^7.52.0", "zod": "^3.23.0", "@hookform/resolvers": "^3.9.0",
+"@types/react": "^18.2.0", "@types/react-dom": "^18.2.0", "vite": "^5.4.0", "@vitejs/plugin-react": "^4.3.0",
+"vitest": "^2.0.0", "@testing-library/react": "^14.3.0", "@testing-library/user-event": "^14.5.0", "@testing-library/jest-dom": "^6.4.0", "jsdom": "^24.0.0", "msw": "^2.3.0", "typescript": "^5.5.0"
+```
+React 18 rules: no APIs newer than 18.x (`use()`, `useActionState`, `useOptimistic`, `<form action>`, ref as a prop). Use `forwardRef` where a ref is passed.
 
 ## Layout
 ```
 frontend/src/
   app/        router.tsx, providers.tsx, RequireRole.tsx
-  api/        client.ts (fetch wrapper, JWT, error → {code,message}), queryKeys.ts, one hooks file per resource (useHall.ts, useDeskQueue.ts, useToken.ts …)
+  api/        client.ts (fetch wrapper, base `VITE_API_URL` = `http://localhost:8000/api/1`, paths exactly as the backend route table, no trailing slash; JWT; error → {code,message}), queryKeys.ts, one hooks file per resource (useHall.ts, useDeskQueue.ts, useToken.ts …)
   features/
     student/  Landing, DetailsStep, GoalsStep, VerifyStep, TokenPage, checkinSchema.ts
     auth/     SignIn, useAuth
@@ -30,7 +41,7 @@ frontend/src/
 - Navigation comes from `lib/nav.ts` (the role matrix in counselqueue-domain). `RequireRole` redirects unknown/forbidden routes to the role's default view (CQ-3). Sign out: clear the query cache and tokens, then `navigate('/console/login', {replace: true})` (CQ-4).
 - Forms: Zod schemas mirror counselqueue-ui-spec rules and messages exactly. Show all errors at once, and keep values. The multi-step student form keeps state in one `useForm` across steps.
 - Copy comes verbatim from counselqueue-ui-spec. Server error `message` is shown as returned.
-- Student pages: mobile-first, 16px gutters, no horizontal scroll at 320px, tap targets ≥44px, small bundle (lazy-load the console and board routes).
+- Student pages are **fully responsive** (user priority): mobile-first, 16px gutters; a single column below 600px; from 600px up, a centred card with max-width 560px (the token page may use two columns ≥900px: token card + status/help); no horizontal scroll at any width from 320px to 1920px; tap targets ≥44px; type in rem with `clamp()`; images/SVG `max-width:100%`; respect `prefers-reduced-motion`; small bundle (lazy-load the console and board routes). Test at 320, 768 and 1280.
 - Hall board: full-screen route with no auth chrome; token numbers use `clamp()` to stay readable across a hall.
 - Accessibility: labels on every input, `aria-live="polite"` for status changes on the token page and queue.
 

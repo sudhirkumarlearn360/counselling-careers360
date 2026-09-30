@@ -7,4 +7,4 @@ dist/
 .DS_Store
 .pytest_cache/
 coverage/
-.superpowers/
+db.sqlite3

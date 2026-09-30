@@ -8,8 +8,8 @@ Queue and counselling-day system for Careers360 counselling drives: student QR s
 - Open questions and our defaults: `.claude/skills/counselqueue-domain/references/open-questions.md`.
 
 ## Stack
-- `backend/`: Django 4.2 LTS, DRF, MySQL 8, SimpleJWT, pytest-django.
-- `frontend/`: React 19, Vite, TypeScript, React Router, TanStack Query (polling), RHF + Zod, Vitest.
+- `backend/`: Python 3.9.6 (`backend/.venv`), Django 4.2 LTS, DRF, MySQL 8, SimpleJWT, pytest-django.
+- `frontend/`: React 18.2 (`"react": "^18.2.0"`), Vite 5, Node 18.20.3 (`frontend/.nvmrc`), TypeScript, React Router 6, TanStack Query (polling), RHF + Zod, Vitest.
 - WhatsApp/OTP via a stub provider. No WebSockets.
 
 ## Kit
@@ -18,12 +18,12 @@ Agents (`.claude/agents/`): django-backend-dev · react-frontend-dev · prd-stor
 Validate the kit: `python3 scripts/check_kit.py`.
 
 ## Working agreement
-- Each epic gets its own plan (superpowers:writing-plans) in `docs/superpowers/plans/`, executed with superpowers:subagent-driven-development.
+- Each epic gets its own plan in `docs/plans/`.
 - Every acceptance criterion gets a test (`test_cq<id>_*` / `it("CQ-<id> …")`). Run prd-story-verifier before calling an epic done.
 - Copy is verbatim from counselqueue-ui-spec. Status changes only through queue services.
 
 ## Model routing
-Use the cheapest model that can do the job well, and **always pass `model` explicitly when dispatching a subagent** (superpowers Model Selection).
+Use the cheapest model that can do the job well, and **always pass `model` explicitly when dispatching a subagent**.
 
 | Level | Setting | Effect |
 |---|---|---|
@@ -44,9 +44,15 @@ Precedence: Agent-call `model` > agent `model:` > `CLAUDE_CODE_SUBAGENT_MODEL` >
 | Per-task review (SDD task reviewer) | sonnet; opus when the task touches locking, state transitions or auth |
 | Final whole-branch review, prd-story-verifier | opus |
 
-**Plans carry the choice:** every task in a `docs/superpowers/plans/*` plan has a `**Model:** haiku|sonnet|opus` line under its title, picked with this table. The subagent-driven-development controller dispatches that task's implementer with that model.
+**Plans carry the choice:** every task in a plan has a `**Model:** haiku|sonnet|opus` line under its title, picked with this table. The controller dispatches that task's implementer with that model.
 
-## Build roadmap (one plan each, in order)
+## Scope by phase
+See `docs/PHASES.md`: Hall Board, Student Status, Insights, ops Hall Queue, Page Editor, call-from-queue, pull forward, intake summary and student timing are Phase 2 / Future (built, hidden behind `frontend/src/lib/phase.ts`).
+
+## Status
+All 61 stories are built: backend (47 routes, 596 tests) and frontend (68 tests), verified end to end with `scripts/smoke_e2e.py` and a real-browser responsive audit of the student screens (320–1280px). Run instructions: README.md.
+
+## Original build roadmap (done)
 1. Foundations: scaffold backend + frontend, settings, MySQL, auth, seed_demo, CI commands.
 2. E1 Access & roles: CQ-1…5.
 3. E2 Centre & counsellor setup: CQ-6…11.
