@@ -11,7 +11,16 @@ the hall board; counsellors run their desk; the front desk and operations lead s
 
 **Scope:** Phase 1 is live in the UI; Phase 2 items are built but hidden — see [docs/PHASES.md](docs/PHASES.md).
 
-## Run it locally
+## Quick setup (any laptop, SQLite)
+
+```bash
+./setup.sh        # venv, deps, backend/.env, migrate, seed_demo, npm install
+./setup.sh run    # same, then starts backend :8000 and frontend :5173
+```
+
+The DB is a local SQLite file (`backend/db.sqlite3`); the MySQL config is commented out in `backend/config/settings/base.py`. The 5 concurrency tests in `tests/queue/test_concurrency.py` need MySQL row locks and fail on SQLite.
+
+## Run it locally (MySQL)
 
 ```bash
 # 1. Database (MySQL 8+): create the DB and a user, then copy backend/.env.example to backend/.env and fill it in

@@ -7,7 +7,7 @@ from pathlib import Path
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
-from config.settings.database import mysql_alias
+# from config.settings.database import mysql_alias  # MySQL (disabled: SQLite for laptop setup)
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(BASE_DIR / ".env")
@@ -82,9 +82,17 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # Writes and locking reads use "default"; read-only report selectors may use "slave".
+# --- MySQL (disabled; re-enable and remove the SQLite block below for production) ---
+# DATABASES = {
+#     "default": mysql_alias("MASTER_DB", test={"NAME": "test_counselqueue"}),
+#     "slave": mysql_alias("SLAVE_DB", test={"MIRROR": "default"}),
+# }
+
+# --- SQLite (local / laptop setup). "slave" points at the same file as "default". ---
+_SQLITE_PATH = BASE_DIR / os.getenv("SQLITE_NAME", "db.sqlite3")
 DATABASES = {
-    "default": mysql_alias("MASTER_DB", test={"NAME": "test_counselqueue"}),
-    "slave": mysql_alias("SLAVE_DB", test={"MIRROR": "default"}),
+    "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": _SQLITE_PATH},
+    "slave": {"ENGINE": "django.db.backends.sqlite3", "NAME": _SQLITE_PATH, "TEST": {"MIRROR": "default"}},
 }
 
 AUTH_USER_MODEL = "accounts.StaffUser"

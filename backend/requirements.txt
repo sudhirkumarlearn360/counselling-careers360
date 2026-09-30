@@ -1,7 +1,7 @@
 Django>=4.2,<4.3
 djangorestframework==3.16.1
 djangorestframework-simplejwt==5.5.1
-mysqlclient==2.1.0
+# mysqlclient==2.1.0  # only needed for MySQL (see config/settings/base.py)
 python-dotenv==1.0.0
 django-cors-headers==4.9.0
 
