@@ -132,3 +132,9 @@ select.sel-move { width: 9.5rem; min-height: 32px; padding: 5px 9px; font-size: 
 @media (max-width: 900px) {
   .filters, .two-col { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Student check-in link */
+.studentlink .url { font-weight: 400; font-size: 13px; overflow-wrap: anywhere; user-select: all; }
+.studentlink b { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.studentlink.compact { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-m); padding: 8px 12px; margin-bottom: 14px; font-size: 13.5px; }
+.studentlink.compact > span:first-child { color: var(--muted); }

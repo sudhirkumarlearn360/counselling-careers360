@@ -150,3 +150,27 @@ details.more[open] summary { margin-bottom: 8px; }
 .stepper li.done .dotc { background: var(--c360-red); border-color: var(--c360-red); color: #fff; }
 .stepper li.done .lbl, .stepper li.now .lbl { color: var(--c360-red); font-weight: 600; }
 .stepper li.now .dotc { border-color: var(--c360-red); color: var(--c360-red); }
+
+/* --- Prototype details: top-bar buttons, QR card, divider, hero decoration --- */
+.land-badge { align-self: stretch; }
+.land-stats { align-items: stretch; }
+.land-divider { width: 1px; background: rgba(255, 255, 255, 0.25); align-self: stretch; }
+.land-left::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image:
+  radial-gradient(circle 180px at 88% 12%, rgba(255, 255, 255, 0.11) 0%, transparent 100%),
+  radial-gradient(circle 60px at 8% 48%, transparent 46px, rgba(255, 255, 255, 0.14) 46px, rgba(255, 255, 255, 0.14) 50px, transparent 50px),
+  radial-gradient(circle 4px at 75% 72%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
+  radial-gradient(circle 3px at 82% 80%, rgba(255, 255, 255, 0.25) 0%, transparent 100%),
+  radial-gradient(circle 5px at 68% 88%, rgba(255, 255, 255, 0.2) 0%, transparent 100%),
+  radial-gradient(circle 6px at 15% 20%, rgba(255, 255, 255, 0.18) 0%, transparent 100%),
+  radial-gradient(circle 3px at 22% 30%, rgba(255, 255, 255, 0.22) 0%, transparent 100%); }
+.land-right { position: relative; overflow: hidden; }
+.land-right::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(circle, rgba(192, 57, 43, 0.12) 1px, transparent 1px); background-size: 24px 24px; -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, black 100%); mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, black 100%); }
+.land-box { position: relative; z-index: 1; }
+.land-qr { display: flex; gap: 16px; align-items: flex-start; background: #fff; border: 2px dashed rgba(192, 57, 43, 0.25); border-radius: 16px; padding: 16px; margin-bottom: 4px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .land-qr { background: var(--card); } }
+.land-qr img, .land-qr .qr-ph { width: clamp(6.5rem, 34vw, 9.375rem); height: auto; aspect-ratio: 1; flex: none; border-radius: 8px; background: #fff; padding: 4px; }
+.land-qr .qt { font-size: 13px; font-weight: 700; color: var(--c360-red); margin-bottom: 4px; }
+.land-qr .qd { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.land-or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12.5px; margin: 14px 0; }
+.land-or::before, .land-or::after { content: ""; flex: 1; height: 1px; background: var(--c360-step-line); }
+.land-form .cform-title { display: none; }

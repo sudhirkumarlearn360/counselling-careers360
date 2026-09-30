@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api, ApiError } from "../../api/client";
 import { useHall } from "../../api/hooks";
 import { Field, errText, useToast } from "../../app/ui";
+import { StudentLink } from "../console/StudentLink";
 import { normaliseMobile } from "../../lib/mobile";
 import { CLARITY, CLASSES, EXAMS, HELP, STREAMS } from "../../lib/format";
 import { toggleExam } from "../student/schema";
@@ -52,6 +53,7 @@ export function AddStudent() {
         </div>
       </div>
       {picker}
+      {load && <StudentLink url={load.centre.student_url} compact />}
       {done && <div className="notice ok" role="status" style={{ marginBottom: "1rem" }}>{done} <Link to="/console/hall">Back to the hall queue</Link></div>}
       {dup && (
         <div className="notice bad" role="alert" style={{ marginBottom: "1rem" }}>

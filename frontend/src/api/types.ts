@@ -10,6 +10,7 @@ export interface CentreLite {
   opens_at: string;
   closes_at: string;
   front_desk_phone?: string;
+  student_url: string;
 }
 export interface Warning {
   code: string;

@@ -167,21 +167,19 @@ export function CheckInFlow({ slug: centreSlug, data }: { slug: string; data: Pu
         if (validate(detailsSchema, DETAILS_FIELDS)) setStep(2);
       }}
     >
-      <h1 className="cform-title">Your details</h1>
-      <p className="cform-sub">One short screen — it takes a minute.</p>
-      <Field label="Your name" htmlFor="name" error={err("name")}>
+      <Field label="1. Student name" htmlFor="name" error={err("name")}>
         <input id="name" className="input" placeholder="As on your marksheet" autoComplete="name" aria-invalid={!!err("name")} {...register("name")} />
       </Field>
-      <Field label="School" htmlFor="school" error={err("school")}>
+      <Field label="2. School" htmlFor="school" error={err("school")}>
         <input id="school" className="input" placeholder="School name and city" autoComplete="off" aria-invalid={!!err("school")} {...register("school")} />
       </Field>
-      <Field label="Your mobile number" htmlFor="mobile" hint="Your token and turn alert arrive on WhatsApp." error={err("mobile")}>
+      <Field label="3. Mobile number" htmlFor="mobile" hint="📲 Your token and turn alert arrive here on WhatsApp." error={err("mobile")}>
         <div className="phone-in">
           <span className="pre">+91</span>
           <input id="mobile" className="input" type="tel" inputMode="numeric" placeholder="10-digit number" autoComplete="tel-national" aria-invalid={!!err("mobile")} {...register("mobile", { onBlur: tidyMobile("mobile") })} />
         </div>
       </Field>
-      <Field label="Your stream" hint="The stream you pick decides which counsellor you're sent to." error={err("stream")}>
+      <Field label="4. Stream" hint="This decides which counsellor you're sent to." error={err("stream")}>
         <div className="streamgrid" role="group" aria-label="Stream">
           {STREAMS.map((s) => (
             <button
@@ -214,7 +212,7 @@ export function CheckInFlow({ slug: centreSlug, data }: { slug: string; data: Pu
         </Field>
       </details>
       <button className="cta" type="submit">Get my free counselling token 🎫</button>
-      <p className="land-foot">🔒 Your details are private and used only for counselling.</p>
+      <p className="land-foot">🔒 Your details are private and used only for counselling.<br />careers360.com</p>
     </form>
   );
 

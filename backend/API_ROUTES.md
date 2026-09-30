@@ -97,3 +97,5 @@ Actions return the refreshed desk payload (+ `called`, `warnings`, `message`, `n
 
 ### ops
 `GET ops/students?q=&counsellor=&centre=&stream=&status=&limit=&offset=` → rows + `count` (matched) + `total`. `GET ops/students/export` (same filters) → `text/csv`. `GET ops/insights?centre=`.
+
+`student_url` (string) is part of every `centre` object the API returns (`auth/me`, `ops/live`, `ops/centres`, `hall/…/queue`, `desk/queue`, `desk/my-centres`): `FRONTEND_BASE_URL` + `/c/<centre slug>`, the page the QR code opens.

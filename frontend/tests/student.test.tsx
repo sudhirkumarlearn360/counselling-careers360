@@ -28,8 +28,10 @@ describe("CQ-12/13/14 landing", () => {
     expect(within(stats).getByText("—")).toBeInTheDocument();
     expect(within(stats).getByText("4")).toBeInTheDocument();
     // the check-in form is on this page itself (no extra click)
-    expect(screen.getByRole("heading", { name: "Your details" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Your name")).toBeInTheDocument();
+    expect(screen.getByText("Scan to check in")).toBeInTheDocument();
+    expect(screen.getByText("or fill your details below")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Class 12 College & Admission Guide" })).toBeInTheDocument();
+    expect(screen.getByLabelText("1. Student name")).toBeInTheDocument();
     expect(screen.getByText("Receive your token on WhatsApp")).toBeInTheDocument();
     expect(screen.getByText("All optional — come as you are.")).toBeInTheDocument();
     expect(screen.getByText(/98110 00000/)).toBeInTheDocument();
@@ -39,7 +41,7 @@ describe("CQ-12/13/14 landing", () => {
     server.use(http.get(`${API}/public/centres/${SLUG}`, () => ok(landing({ open: false, message: "This centre isn't open for check-in — it runs on 1 Oct 2026." }))));
     renderAt(`/c/${SLUG}`);
     expect(await screen.findByText(/This centre isn't open for check-in/)).toBeInTheDocument();
-    expect(screen.queryByLabelText("Your name")).toBeNull();
+    expect(screen.queryByLabelText("1. Student name")).toBeNull();
   });
 
   it("CQ-26: reopening on the same phone returns to the live token, not a blank form", async () => {
@@ -55,9 +57,9 @@ describe("CQ-15/16/17/18 check-in flow", () => {
   beforeEach(() => server.use(http.get(`${API}/public/centres/${SLUG}`, () => ok(landing()))));
 
   async function fillDetails() {
-    await userEvent.type(await screen.findByLabelText("Your name"), "Asha Rao");
-    await userEvent.type(screen.getByLabelText("School"), "DPS Gwalior");
-    await userEvent.type(screen.getByLabelText("Your mobile number"), "+91 98110 22001");
+    await userEvent.type(await screen.findByLabelText("1. Student name"), "Asha Rao");
+    await userEvent.type(screen.getByLabelText("2. School"), "DPS Gwalior");
+    await userEvent.type(screen.getByLabelText("3. Mobile number"), "+91 98110 22001");
     await userEvent.click(screen.getByRole("button", { name: "Science – PCM" }));
     await userEvent.click(screen.getByRole("button", { name: /Get my free counselling token/ }));
   }
@@ -67,23 +69,38 @@ describe("CQ-15/16/17/18 check-in flow", () => {
     await userEvent.click(screen.getByRole("checkbox"));
   }
 
+  it("the QR code is real: it encodes this centre's check-in URL", async () => {
+    renderAt(`/c/${SLUG}?new=1`);
+    const img = (await screen.findByAltText(/QR code that opens/)) as HTMLImageElement;
+    expect(img.alt).toBe(`QR code that opens ${window.location.origin}/c/${SLUG}`);
+    await waitFor(() => expect(img.src).toMatch(/^data:image\/svg\+xml/));
+    expect(decodeURIComponent(img.src)).toContain("<svg"); // a drawn code, not a placeholder
+  });
+
+  it("the student top bar has no Theme or Start over buttons", async () => {
+    renderAt(`/c/${SLUG}?new=1`);
+    await screen.findByText("Scan to check in");
+    expect(screen.queryByRole("button", { name: "Theme" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Start over" })).toBeNull();
+  });
+
   it("autofill hints: name, national phone and email are recognised; the parent's box is never auto-filled with the student's own", async () => {
     renderAt(`/c/${SLUG}?new=1`);
-    expect(await screen.findByLabelText("Your name")).toHaveAttribute("autocomplete", "name");
-    expect(screen.getByLabelText("Your mobile number")).toHaveAttribute("autocomplete", "tel-national");
-    expect(screen.getByLabelText("Your mobile number")).toHaveAttribute("name", "mobile");
+    expect(await screen.findByLabelText("1. Student name")).toHaveAttribute("autocomplete", "name");
+    expect(screen.getByLabelText("3. Mobile number")).toHaveAttribute("autocomplete", "tel-national");
+    expect(screen.getByLabelText("3. Mobile number")).toHaveAttribute("name", "mobile");
     expect(screen.getByLabelText("Email (optional)")).toHaveAttribute("autocomplete", "email");
     expect(screen.getByLabelText("Parent's number (optional)")).toHaveAttribute("autocomplete", "off");
-    expect(screen.getByLabelText("School")).toHaveAttribute("autocomplete", "off");
+    expect(screen.getByLabelText("2. School")).toHaveAttribute("autocomplete", "off");
   });
 
   it("browser autofill that sets the boxes WITHOUT firing change events still submits correctly", async () => {
     renderAt(`/c/${SLUG}?new=1`);
-    const name = (await screen.findByLabelText("Your name")) as HTMLInputElement;
+    const name = (await screen.findByLabelText("1. Student name")) as HTMLInputElement;
     // What a browser does when it fills a saved profile: assign the value, no React event.
     name.value = "Asha Rao";
-    (screen.getByLabelText("School") as HTMLInputElement).value = "DPS Gwalior";
-    (screen.getByLabelText("Your mobile number") as HTMLInputElement).value = "+91 98110 22001";
+    (screen.getByLabelText("2. School") as HTMLInputElement).value = "DPS Gwalior";
+    (screen.getByLabelText("3. Mobile number") as HTMLInputElement).value = "+91 98110 22001";
     await userEvent.click(screen.getByRole("button", { name: "Science – PCM" }));
     await userEvent.click(screen.getByRole("button", { name: /Get my free counselling token/ }));
     expect(await screen.findByRole("list", { name: "Progress" })).toBeInTheDocument(); // no validation errors
@@ -94,7 +111,7 @@ describe("CQ-15/16/17/18 check-in flow", () => {
     "the number %s is accepted and shown as the clean 10 digits when you leave the box",
     async (typed) => {
       renderAt(`/c/${SLUG}?new=1`);
-      const mobile = (await screen.findByLabelText("Your mobile number")) as HTMLInputElement;
+      const mobile = (await screen.findByLabelText("3. Mobile number")) as HTMLInputElement;
       await userEvent.type(mobile, typed);
       await userEvent.tab();
       expect(mobile).toHaveValue("9811022001");
@@ -116,10 +133,10 @@ describe("CQ-15/16/17/18 check-in flow", () => {
 
   it("the landing page IS the form: no stepper on it; after submitting, the stepper Details ✓ · Goals · Verify · Token appears", async () => {
     renderAt(`/c/${SLUG}?new=1`);
-    await userEvent.type(await screen.findByLabelText("Your name"), "Asha Rao");
+    await userEvent.type(await screen.findByLabelText("1. Student name"), "Asha Rao");
     expect(screen.queryByRole("list", { name: "Progress" })).toBeNull(); // nothing yet on the first form
-    await userEvent.type(screen.getByLabelText("School"), "DPS Gwalior");
-    await userEvent.type(screen.getByLabelText("Your mobile number"), "9811022001");
+    await userEvent.type(screen.getByLabelText("2. School"), "DPS Gwalior");
+    await userEvent.type(screen.getByLabelText("3. Mobile number"), "9811022001");
     await userEvent.click(screen.getByRole("button", { name: "Science – PCM" }));
     await userEvent.click(screen.getByRole("button", { name: /Get my free counselling token/ }));
     const steps = await screen.findByRole("list", { name: "Progress" });
@@ -131,8 +148,8 @@ describe("CQ-15/16/17/18 check-in flow", () => {
 
   it("reports every failing details field together and keeps what was typed", async () => {
     renderAt(`/c/${SLUG}?new=1`);
-    await userEvent.type(await screen.findByLabelText("Your name"), "Al");
-    await userEvent.type(screen.getByLabelText("Your mobile number"), "12345");
+    await userEvent.type(await screen.findByLabelText("1. Student name"), "Al");
+    await userEvent.type(screen.getByLabelText("3. Mobile number"), "12345");
     await userEvent.type(screen.getByLabelText("Email (optional)"), "nope");
     await userEvent.click(screen.getByRole("button", { name: /Get my free counselling token/ }));
     expect(await screen.findByText("Enter your name (at least 3 letters).")).toBeInTheDocument();
@@ -140,9 +157,9 @@ describe("CQ-15/16/17/18 check-in flow", () => {
     expect(screen.getByText("A 10-digit mobile number is needed for the turn alert.")).toBeInTheDocument();
     expect(screen.getByText("That email doesn't look right.")).toBeInTheDocument();
     expect(screen.getByText("Pick the stream you're in.")).toBeInTheDocument();
-    expect(screen.getByLabelText("Your name")).toHaveValue("Al");
-    expect(screen.getByLabelText("Your mobile number")).toHaveValue("12345");
-    expect(screen.getByText("The stream you pick decides which counsellor you're sent to.")).toBeInTheDocument();
+    expect(screen.getByLabelText("1. Student name")).toHaveValue("Al");
+    expect(screen.getByLabelText("3. Mobile number")).toHaveValue("12345");
+    expect(screen.getByText("This decides which counsellor you're sent to.")).toBeInTheDocument();
   });
 
   it("goals need a course, a help choice and an unticked-by-default consent; 'None' clears the other exams", async () => {
@@ -186,7 +203,7 @@ describe("CQ-15/16/17/18 check-in flow", () => {
     expect(await screen.findByText("That code doesn't match — check your WhatsApp")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "← Change number" }));
-    expect(await screen.findByLabelText("Your name")).toHaveValue("Asha Rao"); // every answer kept
+    expect(await screen.findByLabelText("1. Student name")).toHaveValue("Asha Rao"); // every answer kept
     await userEvent.click(screen.getByRole("button", { name: /Get my free counselling token/ }));
     expect(await screen.findByLabelText(/Course or career/)).toHaveValue("B.Tech");
     expect(screen.getByRole("checkbox")).toBeChecked();
@@ -230,7 +247,7 @@ describe("CQ-15/16/17/18 check-in flow", () => {
     await userEvent.type(await screen.findByLabelText("Your code"), "1234");
     await userEvent.click(screen.getByRole("button", { name: "Get my token" }));
     expect(await screen.findByText("That email doesn't look right.")).toBeInTheDocument();
-    expect(screen.getByLabelText("Your name")).toHaveValue("Asha Rao");
+    expect(screen.getByLabelText("1. Student name")).toHaveValue("Asha Rao");
   });
 });
 

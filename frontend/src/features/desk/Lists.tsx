@@ -4,6 +4,7 @@ import { useMyList } from "../../api/hooks";
 import { StatusPill } from "../../app/ui";
 import { fmtMobile, prettyDate, streamName } from "../../lib/format";
 import { phase } from "../../lib/phase";
+import { StudentLink } from "../console/StudentLink";
 import { StudentDetailsDialog } from "../ops/StudentDetails";
 import { useDeskContext } from "./useDeskContext";
 
@@ -77,6 +78,7 @@ export function MyCentres() {
             <div className="kvrow"><span>Students so far</span><b>{c.students}</b></div>
             <div className="kvrow"><span>Counsellors on site</span><b>{c.counsellors_on_site}</b></div>
             <div className="kvrow"><span>Your desk</span><b>{c.desk}</b></div>
+            <StudentLink url={c.centre.student_url} />
             {c.live && <Link className="btn primary" style={{ marginTop: 12 }} to={`${base}/queue`}>Open today's queue</Link>}
           </article>
         ))}

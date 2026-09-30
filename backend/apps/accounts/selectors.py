@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from django.conf import settings
 from django.utils import timezone
 
 from apps.accounts.models import Role
@@ -41,8 +42,14 @@ def default_view_for(role: str) -> str:
     return NAV[role][0][0]
 
 
+def student_url(centre) -> str:
+    """The student's check-in page for this centre (what the QR code opens)."""
+    return f"{settings.FRONTEND_BASE_URL.rstrip('/')}/c/{centre.slug}"
+
+
 def centre_payload(centre) -> dict:
     return {
+        "student_url": student_url(centre),
         "id": centre.id,
         "city": centre.city,
         "venue": centre.venue,

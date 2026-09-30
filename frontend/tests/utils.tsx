@@ -44,6 +44,7 @@ export function renderAt(path: string) {
 export const centre = {
   id: 1, city: "Gwalior", venue: "Hotel Landmark", date: "2026-09-29", slug: "gwalior-2026-09-29",
   status: "live" as const, opens_at: "10:00", closes_at: "18:00", front_desk_phone: "98110 00000",
+  student_url: "http://localhost:5173/c/gwalior-2026-09-29",
 };
 
 export const meFor = (role: Me["role"], extra: Partial<Me> = {}): Me => ({

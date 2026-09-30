@@ -4,6 +4,7 @@ import { api, ApiError } from "../../api/client";
 import { useHall } from "../../api/hooks";
 import type { HallRow } from "../../api/types";
 import { Dialog, StatusPill, errText, useToast } from "../../app/ui";
+import { StudentLink } from "../console/StudentLink";
 import { StudentDetailsDialog } from "../ops/StudentDetails";
 import { fmtMobile, streamName } from "../../lib/format";
 import { useHallCentre } from "./useHallCentre";
@@ -57,6 +58,7 @@ export function HallQueue() {
         {data && data.header.late > 0 && <div className="right"><span className="pill bad">{data.header.late} over {data.header.wait_promise_min} min</span></div>}
       </div>
       {picker}
+      {data && <StudentLink url={data.centre.student_url} compact />}
       {isLoading && <p role="status">Loading…</p>}
       {data && (
         <>

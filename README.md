@@ -38,7 +38,7 @@ Demo entry points (after `seed_demo`):
 | Front desk | `http://localhost:5173/console/login` | `reception@careers360.com` / `desk123` |
 | Counsellor | same | `meera@careers360.com` / `desk123` |
 | Operations lead | same | `admin@careers360.com` / `admin123` |
-| Hall board | `http://localhost:5173/board/gwalior-demo` | none |
+| Hall board | `http://localhost:5173/board/gwalior-demo` | none (Phase 2; hidden) |
 
 ## Checks
 
@@ -47,6 +47,8 @@ cd backend  && .venv/bin/pytest -q && .venv/bin/ruff check .            # 596 te
 cd frontend && npm test && npm run typecheck && npm run lint && npm run build   # 68 tests
 python3 scripts/smoke_e2e.py                                            # a whole counselling day over HTTP (backend running)
 ```
+
+Each centre's student link (the page its QR code opens) is shown in the CMS to every user, with an Open button: Live centres, Centres & dates, Hall queue, Add a student and My centres.
 
 WhatsApp and OTP go through a stub provider (`MESSAGING_PROVIDER`); nothing is sent to a real number until a real
 provider is implemented behind `apps.messaging.providers`.

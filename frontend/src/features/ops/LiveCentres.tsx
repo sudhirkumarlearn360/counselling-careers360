@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { StudentLink } from "../console/StudentLink";
 import { useLive } from "../../api/hooks";
 import { minutesLabel, streamName } from "../../lib/format";
 import { phase } from "../../lib/phase";
@@ -31,6 +32,7 @@ export function LiveCentres() {
             </div>
             <span className="pill ok dotted">Live</span>
           </div>
+          <StudentLink url={c.student_url} compact />
           <div className="stats-row">
             <div className="kpi"><div className="n">{c.summary.checked_in}</div><div className="l">Checked in</div><div className="d">{c.summary.self_scan} self-scan, {c.summary.at_desk} at desk</div></div>
             <div className="kpi"><div className="n">{c.summary.waiting}</div><div className="l">Waiting now</div><div className={`d${c.summary.late ? " bad" : ""}`}>{c.summary.late} over {30} min</div></div>

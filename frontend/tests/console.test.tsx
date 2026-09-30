@@ -418,3 +418,55 @@ describe("Add a Centre and All Students (agreed scope)", () => {
     expect(within(table).getByRole("columnheader", { name: "Outcome" })).toBeInTheDocument();
   });
 });
+
+
+describe("Student check-in link in the CMS (every user, every centre)", () => {
+  const URL_ = "http://localhost:5173/c/gwalior-2026-09-29";
+  const expectLink = (name = /Open student page/) => {
+    const a = screen.getByRole("link", { name });
+    expect(a).toHaveAttribute("href", URL_);
+    expect(a).toHaveAttribute("target", "_blank"); // opens in a new tab
+    expect(a).toHaveAttribute("rel", expect.stringContaining("noopener"));
+    expect(screen.getAllByText(URL_).length).toBeGreaterThan(0);
+  };
+
+  it("front desk: on the Hall queue", async () => {
+    signInAs("reception");
+    server.use(http.get(`${API}/hall/centres/1/queue`, () => ok(hall())));
+    renderAt("/console/hall");
+    await screen.findByLabelText("Students in the hall");
+    expectLink();
+  });
+
+  it("front desk: on Add a student", async () => {
+    signInAs("reception");
+    server.use(http.get(`${API}/hall/centres/1/queue`, () => ok(hall())));
+    renderAt("/console/add");
+    await screen.findByRole("link", { name: /Open student page/ });
+    expectLink();
+  });
+
+  it("counsellor: on each card in My centres", async () => {
+    signInAs("counsellor", { counsellor: 3 });
+    server.use(http.get(`${API}/desk/my-centres`, () => ok([{ centre, desk: "Desk 1", live: true, upcoming: false, students: 9, my_students: 4, counsellors_on_site: 3 }])));
+    renderAt("/console/roster");
+    await screen.findByText("Your desk");
+    expectLink();
+  });
+
+  it("super admin: on Centres & dates", async () => {
+    signInAs("ops_lead");
+    server.use(http.get(`${API}/ops/centres`, () => ok([{ ...centre, expected_students: 120, covered_streams: [], uncovered_streams: [], counsellor_count: 0, counsellor_names: [], student_count: 0, front_desk_email: "" }])));
+    renderAt("/console/centres");
+    await screen.findByText("Student check-in link");
+    expectLink();
+  });
+
+  it("super admin: on each centre in Live centres", async () => {
+    signInAs("ops_lead");
+    server.use(http.get(`${API}/ops/live`, () => ok([{ ...centre, summary: { checked_in: 0, self_scan: 0, at_desk: 0, waiting: 0, late: 0, counselled: 0, no_shows: 0, planned: 100, capacity_pct: 0 }, counsellors: [] }])));
+    renderAt("/console/live");
+    await screen.findByText("Student check-in link");
+    expectLink();
+  });
+});

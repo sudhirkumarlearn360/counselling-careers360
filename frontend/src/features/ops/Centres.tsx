@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { StudentLink } from "../console/StudentLink";
 import { api, ApiError } from "../../api/client";
 import { useCentres } from "../../api/hooks";
 import type { CentreFull } from "../../api/types";
@@ -77,6 +78,7 @@ export function Centres() {
             )}
             <div className="kvrow"><span>Students</span><b>{c.student_count} / {c.expected_students} planned</b></div>
             <div className="kvrow"><span>Front desk login</span><b>{c.front_desk_email || "—"}</b></div>
+            <StudentLink url={c.student_url} />
             <div className="toolbar" style={{ marginTop: 12, marginBottom: 0 }}>
               {c.status !== "closed" && <Link className="btn sm" to="/console/counsellors">Assign counsellor</Link>}
               {c.status === "live" && <button className="btn sm" onClick={() => decide(c, "close", false)}>Close the day</button>}
